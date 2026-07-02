@@ -1,0 +1,779 @@
+> **Base URL:**  `https://services.leadconnectorhq.com`\
+> **API Version:**  `v3` (header: `Version: v3`)\
+> **Last Updated:**  2026-07-02
+
+---
+
+## Table of Contents
+
+1. [SDK Setup (Node.js) ](#1-sdk-setup-nodejs)
+
+2. [Authentication](#2-authentication)
+   - [OAuth 2.0](#21-oauth-20)
+   - [API Key / Basic Auth (External) ](#22-api-key--basic-auth-external)
+   - [Configure Your Fields](#23-configure-your-fields)
+
+3. [API Reference](#3-api-reference)
+   - [Associations](#31-associations)
+   - [Brand Boards](#32-brand-boards)
+   - [Calendars](#33-calendars)
+   - [Companies](#34-companies)
+   - [Contacts](#35-contacts)
+   - [Conversations](#36-conversations)
+   - [Custom Fields V2](#37-custom-fields-v2)
+   - [Locations / Sub-Account](#38-locations--sub-account)
+   - [Media Storage](#39-media-storage)
+   - [Objects](#310-objects)
+   - [Opportunities](#311-opportunities)
+   - [Proposals](#312-proposals)
+   - [Users](#313-users)
+   - [LC Phone](#314-lc-phone)
+
+4. [Recent Changelog](#4-recent-changelog)
+
+5. [Appendix](#5-appendix)
+
+---
+
+## 1. SDK Setup (Node.js)
+
+### Installation
+
+```bash
+npm install @gohighlevel/api-client
+```
+
+Requires Node.js v18+. Works with npm, yarn, or pnpm.
+
+### Quick Start
+
+```javascript
+const { HighLevel } = require('@gohighlevel/api-client');
+
+const highLevel = new HighLevel({
+  clientId: process.env.HIGHLEVEL_CLIENT_ID,
+  clientSecret: process.env.HIGHLEVEL_CLIENT_SECRET,
+});
+
+async function listContacts() {
+  try {
+    const response = await highLevel.contacts.searchContactsAdvanced({
+      locationId: 'zBG0T99IsBgOoXUrcROH',
+      pageLimit: 5,
+    });
+    console.log(response);
+  } catch (error) {
+    console.error('HighLevel error:', error);
+  }
+}
+listContacts();
+```
+
+### Token Storage & Refresh
+
+By default tokens live in memory. For production, use a persistent store:
+
+```javascript
+import { HighLevel, MongoDBSessionStorage } from '@gohighlevel/api-client';
+
+const highLevel = new HighLevel({
+  clientId: process.env.HIGHLEVEL_CLIENT_ID,
+  clientSecret: process.env.HIGHLEVEL_CLIENT_SECRET,
+  sessionStorage: new MongoDBSessionStorage({
+    dbUrl: 'mongodb://localhost:27017',
+    dbName: 'ghl_sessions'
+  })
+});
+```
+
+Supports Redis, MongoDB, SQL, or custom storage adapters. Tokens are auto-refreshed on expiry.
+
+### Webhook Middleware
+
+```javascript
+app.use('/api/webhooks/ghl', highLevel.webhooks.subscribe());
+app.post('/api/webhooks/ghl', (req, res) => {
+  // Business logic — tokens guaranteed current
+  res.json({ ok: true });
+});
+```
+
+Automatically handles INSTALL/UNINSTALL events, validates signatures, and syncs session storage.
+
+### SDK Resources
+
+- [GitHub SDK](https://github.com/GoHighLevel/highlevel-api-sdk)
+- [npm Package](https://www.npmjs.com/package/@gohighlevel/api-client)
+- [Examples](https://github.com/GoHighLevel/ghl-sdk-examples/tree/main/node)
+
+---
+
+## 2. Authentication
+
+### 2.1 OAuth 2.0
+
+Standard OAuth 2.0 flow for marketplace apps.
+
+**Token Types:**
+
+- **Sub-Account Token** — for sub-account (location) level access
+- **Agency Token** — for agency-level operations
+
+**Header:**  `Authorization: Bearer <TOKEN>`
+
+### 2.2 API Key / Basic Auth (External)
+
+For external authentication where your provider uses API keys, username/password, or custom credentials.
+
+#### Configuration at a Glance
+
+1. **Configure Your Fields** — define credentials/inputs the user provides
+2. **Configure Authentication Endpoint** — the HTTP request HighLevel sends to verify
+3. **(Optional) Multi-Account Support** — let sub-accounts connect multiple external accounts
+
+#### Authentication Endpoint Settings
+
+| Setting            | Description                                                         |
+| :----------------- | :------------------------------------------------------------------ |
+| **Method**         | `GET`, `POST`, `PUT`, `PATCH` (no body with `GET`)                  |
+| **Auth URL**       | HTTPS endpoint to verify credentials                                |
+| **URL Parameters** | Query-string key/value pairs                                        |
+| **HTTP Headers**   | Request headers (e.g., `Authorization: Bearer {{userData.apiKey}}`) |
+| **Request Body**   | Body key/value pairs (not for `GET`)                                |
+
+**Success Status Codes:**  `200, 201, 202, 204` — any other code blocks installation.
+
+#### Install Payload
+
+When a user installs your app, this payload is sent to your auth endpoint:
+
+| Key                   | Type      | Details                                                     |
+| :-------------------- | :-------- | :---------------------------------------------------------- |
+| `companyId`           | string    | Agency ID ( `null` if installed by sub-account)             |
+| `{field_key}`         | string    | One per configured field (up to 3)                          |
+| `approveAllLocations` | boolean   | `true` if "Select all N sub-accounts" was checked           |
+| `locationId`          | string\[] | Selected sub-account IDs (if `approveAllLocations = false`) |
+| `excludedLocations`   | string\[] | Excluded sub-account IDs (if `approveAllLocations = true`)  |
+
+### 2.3 Configure Your Fields
+
+Collect custom inputs from users at install time. Available for both Basic Auth and OAuth 2.0.
+
+**Field Properties:**
+
+| Property          | Required | Description                                     |
+| :---------------- | :------- | :---------------------------------------------- |
+| **Label**         | No       | Friendly name shown on install form             |
+| **Key**           | Yes      | Programmatic identifier ( `{{userData.<key>}}`) |
+| **Type**          | No       | `text` (default) or `password` (masked)         |
+| **Required**      | No       | If checked, user cannot install without filling |
+| **Help Text**     | No       | Hint text under the field                       |
+| **Default Value** | No       | Pre-filled value when empty                     |
+
+**Limit:**  Maximum 3 fields.
+
+**Usage:**  Reference values as `{{userData.<key>}}` anywhere in your configuration:
+
+- Headers: `Authorization: Bearer {{userData.api_key}}`
+- URL params: `?token={{userData.api_key}}`
+- Request body: `{ "apiKey": "{{userData.api_key}}" }`
+- URL itself: `https://{{userData.store_domain}}/api/me`
+
+---
+
+## 3. API Reference
+
+### Common Headers
+
+```plain
+Authorization: Bearer <TOKEN>
+Version: v3
+Content-Type: application/json
+Accept: application/json
+```
+
+### Common Scopes Pattern
+
+Most endpoints require specific scopes. Scopes follow the pattern: `{resource}/{operation}` e.g., `contacts.readonly`, `contacts.write`.
+
+### Auth Methods
+
+- **OAuth Access Token** — Sub-Account or Agency token
+- **Private Integration Token (PIT)**  — Sub-Account level token
+
+---
+
+### 3.1 Associations
+
+Associations connect entities (contacts, custom objects, opportunities) together.
+
+#### Endpoints
+
+| Method   | Path                            | Description                         |
+| :------- | :------------------------------ | :---------------------------------- |
+| `GET`    | `/associations/keys/{keyName}`  | Get association key by key name     |
+| `GET`    | `/associations/by-object-keys`  | Get association by object keys      |
+| `GET`    | `/associations/{associationId}` | Get association by ID               |
+| `GET`    | `/associations`                 | Get all associations for a location |
+| `POST`   | `/associations`                 | Create association                  |
+| `PUT`    | `/associations/{associationId}` | Update association (labels)         |
+| `DELETE` | `/associations/{associationId}` | Delete USER\_DEFINED association    |
+
+#### Relations
+
+| Method   | Path                                   | Description                                 |
+| :------- | :------------------------------------- | :------------------------------------------ |
+| `POST`   | `/associations/relations`              | Create relation between associated entities |
+| `GET`    | `/associations/relations/{recordId}`   | Get all relations by record ID              |
+| `DELETE` | `/associations/relations/{relationId}` | Delete relation                             |
+
+---
+
+### 3.2 Brand Boards
+
+Brand voice management for locations.
+
+#### Endpoints (as of 2026-06-11)
+
+| Method   | Path                                                             | Description        |
+| :------- | :--------------------------------------------------------------- | :----------------- |
+| `GET`    | `/brand-boards/locations/{locationId}/brand-voices`              | List brand voices  |
+| `POST`   | `/brand-boards/locations/{locationId}/brand-voices`              | Create brand voice |
+| `GET`    | `/brand-boards/locations/{locationId}/brand-voices/{id}`         | Get brand voice    |
+| `PATCH`  | `/brand-boards/locations/{locationId}/brand-voices/{id}`         | Update brand voice |
+| `DELETE` | `/brand-boards/locations/{locationId}/brand-voices/{id}`         | Delete brand voice |
+| `POST`   | `/brand-boards/locations/{locationId}/brand-voices/{id}/default` | Set as default     |
+
+> ⚠️ Public v1 paths ( `/brand-boards/public/v1/...`) are deprecated.
+
+---
+
+### 3.3 Calendars
+
+Full calendar management including events, appointments, availability, and resources.
+
+#### Calendars
+
+| Method   | Path                      | Description                                 |
+| :------- | :------------------------ | :------------------------------------------ |
+| `GET`    | `/calendars/`             | Get all calendars in a location             |
+| `POST`   | `/calendars/`             | Create calendar                             |
+| `GET`    | `/calendars/{calendarId}` | Get calendar by ID                          |
+| `PUT`    | `/calendars/{calendarId}` | Update calendar                             |
+| `DELETE` | `/calendars/{calendarId}` | Delete calendar                             |
+| `GET`    | `/calendars/slots`        | Get free slots (date range, timezone, user) |
+
+#### Calendar Events (Appointments)
+
+| Method   | Path                                   | Description         |
+| :------- | :------------------------------------- | :------------------ |
+| `POST`   | `/calendars/events/appointments`       | Create appointment  |
+| `GET`    | `/calendars/events/appointments/{id}`  | Get appointment     |
+| `PUT`    | `/calendars/events/appointments/{id}`  | Update appointment  |
+| `GET`    | `/calendars/events`                    | Get calendar events |
+| `GET`    | `/calendars/events/blocked-slots`      | Get blocked slots   |
+| `POST`   | `/calendars/events/blocked-slots`      | Create block slot   |
+| `PUT`    | `/calendars/events/blocked-slots/{id}` | Update block slot   |
+| `DELETE` | `/calendars/events/{id}`               | Delete event        |
+
+#### Appointment Notes
+
+| Method   | Path                                                 | Description |
+| :------- | :--------------------------------------------------- | :---------- |
+| `GET`    | `/calendars/events/appointments/{id}/notes`          | Get notes   |
+| `POST`   | `/calendars/events/appointments/{id}/notes`          | Create note |
+| `PUT`    | `/calendars/events/appointments/{id}/notes/{noteId}` | Update note |
+| `DELETE` | `/calendars/events/appointments/{id}/notes/{noteId}` | Delete note |
+
+#### Availability (Schedules)
+
+| Method   | Path                                                            | Description                    |
+| :------- | :-------------------------------------------------------------- | :----------------------------- |
+| `GET`    | `/calendars/availability/schedules`                             | List schedules                 |
+| `POST`   | `/calendars/availability/schedules`                             | Create schedule                |
+| `GET`    | `/calendars/availability/schedules/{id}`                        | Get schedule                   |
+| `PUT`    | `/calendars/availability/schedules/{id}`                        | Update schedule                |
+| `DELETE` | `/calendars/availability/schedules/{id}`                        | Delete schedule                |
+| `POST`   | `/calendars/availability/schedules/{id}/calendars`              | Apply schedule to calendar     |
+| `DELETE` | `/calendars/availability/schedules/{id}/calendars/{calendarId}` | Remove schedule from calendar  |
+| `POST`   | `/calendars/availability/calendars/{calendarId}/schedules`      | Create event calendar schedule |
+| `GET`    | `/calendars/availability/calendars/{calendarId}/schedules`      | Get event calendar schedule    |
+| `PUT`    | `/calendars/availability/calendars/{calendarId}/schedules`      | Update event calendar schedule |
+
+---
+
+### 3.4 Companies
+
+Company record management.
+
+| Method   | Path                     | Description    |
+| :------- | :----------------------- | :------------- |
+| `GET`    | `/companies/{companyId}` | Get company    |
+| `POST`   | `/companies/`            | Create company |
+| `PUT`    | `/companies/{companyId}` | Update company |
+| `DELETE` | `/companies/{companyId}` | Delete company |
+| `GET`    | `/companies/`            | List companies |
+
+---
+
+### 3.5 Contacts
+
+Core CRM contact management with full CRUD, search, tasks, appointments, tags, and notes.
+
+#### Contacts (Core)
+
+| Method   | Path                              | Description                                  |
+| :------- | :-------------------------------- | :------------------------------------------- |
+| `GET`    | `/contacts/{contactId}`           | Get contact by ID                            |
+| `POST`   | `/contacts/`                      | Create contact                               |
+| `PUT`    | `/contacts/{contactId}`           | Update contact                               |
+| `DELETE` | `/contacts/{contactId}`           | Delete contact                               |
+| `POST`   | `/contacts/upsert`                | Upsert contact (based on duplicate settings) |
+| `GET`    | `/contacts/business/{businessId}` | Get contacts by business ID                  |
+
+#### Search
+
+| Method | Path                         | Description                        |
+| :----- | :--------------------------- | :--------------------------------- |
+| `POST` | `/contacts/search`           | Search contacts (advanced filters) |
+| `POST` | `/contacts/search/duplicate` | Get duplicate contact              |
+
+#### Tasks
+
+| Method   | Path                                             | Description           |
+| :------- | :----------------------------------------------- | :-------------------- |
+| `GET`    | `/contacts/{contactId}/tasks`                    | Get all tasks         |
+| `POST`   | `/contacts/{contactId}/tasks`                    | Create task           |
+| `GET`    | `/contacts/{contactId}/tasks/{taskId}`           | Get task              |
+| `PUT`    | `/contacts/{contactId}/tasks/{taskId}`           | Update task           |
+| `DELETE` | `/contacts/{contactId}/tasks/{taskId}`           | Delete task           |
+| `PUT`    | `/contacts/{contactId}/tasks/{taskId}/completed` | Update task completed |
+
+#### Appointments
+
+| Method | Path                                 | Description                  |
+| :----- | :----------------------------------- | :--------------------------- |
+| `GET`  | `/contacts/{contactId}/appointments` | Get appointments for contact |
+
+#### Tags
+
+| Method   | Path                         | Description |
+| :------- | :--------------------------- | :---------- |
+| `POST`   | `/contacts/{contactId}/tags` | Add tags    |
+| `DELETE` | `/contacts/{contactId}/tags` | Remove tags |
+
+#### Notes
+
+| Method   | Path                                   | Description   |
+| :------- | :------------------------------------- | :------------ |
+| `GET`    | `/contacts/{contactId}/notes`          | Get all notes |
+| `POST`   | `/contacts/{contactId}/notes`          | Create note   |
+| `GET`    | `/contacts/{contactId}/notes/{noteId}` | Get note      |
+| `PUT`    | `/contacts/{contactId}/notes/{noteId}` | Update note   |
+| `DELETE` | `/contacts/{contactId}/notes/{noteId}` | Delete note   |
+
+---
+
+### 3.6 Conversations
+
+Unified messaging across SMS, email, GMB, FB, IG, and live chat.
+
+#### Conversations
+
+| Method   | Path                              | Description         |
+| :------- | :-------------------------------- | :------------------ |
+| `GET`    | `/conversations/{conversationId}` | Get conversation    |
+| `POST`   | `/conversations/`                 | Create conversation |
+| `PUT`    | `/conversations/{conversationId}` | Update conversation |
+| `DELETE` | `/conversations/{conversationId}` | Delete conversation |
+
+#### Search
+
+| Method | Path                    | Description          |
+| :----- | :---------------------- | :------------------- |
+| `POST` | `/conversations/search` | Search conversations |
+
+#### Email
+
+| Method   | Path                                        | Description                 |
+| :------- | :------------------------------------------ | :-------------------------- |
+| `GET`    | `/conversations/email/{messageId}`          | Get email by ID             |
+| `DELETE` | `/conversations/email/{messageId}/schedule` | Cancel scheduled email      |
+| `PUT`    | `/conversations/email/{messageId}/status`   | Update email message status |
+
+#### Messages
+
+| Method   | Path                                                         | Description                    |
+| :------- | :----------------------------------------------------------- | :----------------------------- |
+| `GET`    | `/conversations/messages/{messageId}`                        | Get message by ID              |
+| `GET`    | `/conversations/{conversationId}/messages`                   | Get messages by conversation   |
+| `POST`   | `/conversations/messages`                                    | Send a new message             |
+| `POST`   | `/conversations/messages/inbound`                            | Add inbound message            |
+| `POST`   | `/conversations/messages/outbound`                           | Add external outbound call     |
+| `DELETE` | `/conversations/messages/{messageId}/schedule`               | Cancel scheduled message       |
+| `POST`   | `/conversations/messages/upload`                             | Upload file attachments        |
+| `PUT`    | `/conversations/messages/{messageId}/status`                 | Update message status          |
+| `POST`   | `/conversations/messages/{messageId}/attachments`            | Add message attachments        |
+| `GET`    | `/conversations/messages/{messageId}/recording`              | Get recording                  |
+| `GET`    | `/conversations/messages/{messageId}/transcription`          | Get transcription              |
+| `GET`    | `/conversations/messages/{messageId}/transcription/download` | Download transcription         |
+| `POST`   | `/conversations/messages/export`                             | Export messages by location ID |
+
+**File Upload Limits:**
+
+- Max file size: 5 MB
+- Max files per upload: 5
+- Supported: JPG, JPEG, PNG, GIF, SVG, HEIC, AI, MP4, MPEG, 3GP, MP3, WAV, PDF, DOC, DOCX, TXT, CSV, XLS, XLSX, PPT, PPTX, ODT, ZIP, RAR, VCF, ICS, and more
+
+---
+
+### 3.7 Custom Fields V2
+
+Manage custom field schemas and values.
+
+| Method   | Path                       | Description         |
+| :------- | :------------------------- | :------------------ |
+| `GET`    | `/custom-fields/`          | List custom fields  |
+| `POST`   | `/custom-fields/`          | Create custom field |
+| `GET`    | `/custom-fields/{fieldId}` | Get custom field    |
+| `PUT`    | `/custom-fields/{fieldId}` | Update custom field |
+| `DELETE` | `/custom-fields/{fieldId}` | Delete custom field |
+
+---
+
+### 3.8 Locations / Sub-Account
+
+Sub-account (formerly "location") management with custom fields, values, templates, tags, and more.
+
+#### Sub-Account (Core)
+
+| Method   | Path                      | Description        |
+| :------- | :------------------------ | :----------------- |
+| `GET`    | `/locations/{locationId}` | Get sub-account    |
+| `POST`   | `/locations/`             | Create sub-account |
+| `PUT`    | `/locations/{locationId}` | Update sub-account |
+| `DELETE` | `/locations/{locationId}` | Delete sub-account |
+
+#### Search
+
+| Method | Path                | Description      |
+| :----- | :------------------ | :--------------- |
+| `POST` | `/locations/search` | Search locations |
+
+#### Custom Field
+
+| Method | Path                                    | Description         |
+| :----- | :-------------------------------------- | :------------------ |
+| `GET`  | `/locations/{locationId}/custom-fields` | Get custom fields   |
+| `POST` | `/locations/{locationId}/custom-fields` | Create custom field |
+
+#### Custom Value
+
+| Method   | Path                                         | Description         |
+| :------- | :------------------------------------------- | :------------------ |
+| `GET`    | `/locations/{locationId}/custom-values`      | Get custom values   |
+| `POST`   | `/locations/{locationId}/custom-values`      | Create custom value |
+| `GET`    | `/locations/{locationId}/custom-values/{id}` | Get custom value    |
+| `PUT`    | `/locations/{locationId}/custom-values/{id}` | Update custom value |
+| `DELETE` | `/locations/{locationId}/custom-values/{id}` | Delete custom value |
+
+#### Recurring Tasks
+
+| Method | Path                                      | Description           |
+| :----- | :---------------------------------------- | :-------------------- |
+| `GET`  | `/locations/{locationId}/recurring-tasks` | Get recurring tasks   |
+| `POST` | `/locations/{locationId}/recurring-tasks` | Create recurring task |
+
+#### Conversation Channel
+
+| Method | Path                                           | Description                        |
+| :----- | :--------------------------------------------- | :--------------------------------- |
+| `POST` | `/locations/{locationId}/conversation-channel` | Create/update conversation channel |
+
+#### Tags
+
+| Method   | Path                                   | Description       |
+| :------- | :------------------------------------- | :---------------- |
+| `GET`    | `/locations/{locationId}/tags`         | Get location tags |
+| `POST`   | `/locations/{locationId}/tags`         | Create tag        |
+| `GET`    | `/locations/{locationId}/tags/{tagId}` | Get tag by ID     |
+| `PUT`    | `/locations/{locationId}/tags/{tagId}` | Update tag        |
+| `DELETE` | `/locations/{locationId}/tags/{tagId}` | Delete tag        |
+
+#### Permissions
+
+| Method | Path                                  | Description     |
+| :----- | :------------------------------------ | :-------------- |
+| `GET`  | `/locations/{locationId}/permissions` | Get permissions |
+
+#### Tasks Search
+
+| Method | Path                                   | Description  |
+| :----- | :------------------------------------- | :----------- |
+| `POST` | `/locations/{locationId}/tasks/search` | Search tasks |
+
+#### Timezone
+
+| Method | Path                               | Description  |
+| :----- | :--------------------------------- | :----------- |
+| `GET`  | `/locations/{locationId}/timezone` | Get timezone |
+
+---
+
+### 3.9 Media Storage
+
+File and folder management for media storage.
+
+| Method   | Path                  | Description                           |
+| :------- | :-------------------- | :------------------------------------ |
+| `GET`    | `/medias/`            | List files/folders                    |
+| `POST`   | `/medias/`            | Upload file (max 25 MB, video 500 MB) |
+| `POST`   | `/medias/folder`      | Create folder                         |
+| `PUT`    | `/medias/{id}`        | Update file/folder                    |
+| `DELETE` | `/medias/{id}`        | Delete file/folder                    |
+| `PUT`    | `/medias/bulk`        | Bulk update files/folders             |
+| `POST`   | `/medias/bulk-delete` | Bulk delete/trash files/folders       |
+
+---
+
+### 3.10 Objects
+
+Custom Objects allow storing and managing information tailored to your business. They extend beyond standard objects (Contacts, Opportunities, Companies).
+
+#### Object Schema
+
+| Method | Path                   | Description                    |
+| :----- | :--------------------- | :----------------------------- |
+| `GET`  | `/objects/`            | Get all objects for a location |
+| `POST` | `/objects/`            | Create custom object schema    |
+| `GET`  | `/objects/{schemaKey}` | Get object schema by key/ID    |
+| `PUT`  | `/objects/{schemaKey}` | Update object schema           |
+
+#### Records
+
+| Method   | Path                                      | Description      |
+| :------- | :---------------------------------------- | :--------------- |
+| `GET`    | `/objects/{schemaKey}/records/{recordId}` | Get record by ID |
+| `POST`   | `/objects/{schemaKey}/records`            | Create record    |
+| `PUT`    | `/objects/{schemaKey}/records/{recordId}` | Update record    |
+| `DELETE` | `/objects/{schemaKey}/records/{recordId}` | Delete record    |
+
+#### Search
+
+```http
+POST /objects/:schemaKey/records/search
+```
+
+**Request Body:**
+
+```json
+{
+  "locationId": "ve9EPM428h8vShlRW1KT",
+  "page": 1,
+  "pageLimit": 10,
+  "query": "Buddy",
+  "searchAfter": ["sx6wyHhbFdRXh302Lunr"]
+}
+```
+
+**Scope:**  `objects/record.readonly`
+
+---
+
+### 3.11 Opportunities
+
+Sales pipeline and opportunity management.
+
+#### Opportunities (Core)
+
+| Method   | Path                                    | Description               |
+| :------- | :-------------------------------------- | :------------------------ |
+| `GET`    | `/opportunities/{opportunityId}`        | Get opportunity           |
+| `POST`   | `/opportunities/`                       | Create opportunity        |
+| `PUT`    | `/opportunities/{opportunityId}`        | Update opportunity        |
+| `DELETE` | `/opportunities/{opportunityId}`        | Delete opportunity        |
+| `POST`   | `/opportunities/upsert`                 | Upsert opportunity        |
+| `PUT`    | `/opportunities/{opportunityId}/status` | Update opportunity status |
+
+#### Search
+
+| Method | Path                             | Description                             |
+| :----- | :------------------------------- | :-------------------------------------- |
+| `POST` | `/opportunities/search`          | Search opportunity                      |
+| `POST` | `/opportunities/search/advanced` | Search opportunities (advanced filters) |
+
+#### Pipelines (Added 2026-06-26)
+
+| Method   | Path                                    | Description     |
+| :------- | :-------------------------------------- | :-------------- |
+| `GET`    | `/opportunities/pipelines`              | Get pipelines   |
+| `POST`   | `/opportunities/pipelines`              | Create pipeline |
+| `GET`    | `/opportunities/pipelines/{pipelineId}` | Get pipeline    |
+| `PUT`    | `/opportunities/pipelines/{pipelineId}` | Update pipeline |
+| `DELETE` | `/opportunities/pipelines/{pipelineId}` | Delete pipeline |
+
+**Pipeline Notes:**
+
+- Pipeline names must be unique per location (case-insensitive)
+- Stage names must be unique within pipeline
+- For manual win probability: set `useOpportunityProbability: true` and `stageWinProbability` (0–100) per stage
+- Update stages array is a full replacement — include `id` to retain, omit to create
+- Deleting a pipeline is irreversible — all opportunities in it are removed
+
+#### Lost Reason
+
+| Method | Path                         | Description      |
+| :----- | :--------------------------- | :--------------- |
+| `GET`  | `/opportunities/lost-reason` | Get lost reasons |
+
+#### Followers
+
+| Method   | Path                                                | Description               |
+| :------- | :-------------------------------------------------- | :------------------------ |
+| `GET`    | `/opportunities/{opportunityId}/followers`          | Get opportunity followers |
+| `POST`   | `/opportunities/{opportunityId}/followers`          | Add follower              |
+| `DELETE` | `/opportunities/{opportunityId}/followers/{userId}` | Remove follower           |
+
+---
+
+### 3.12 Proposals
+
+Documents and contracts for proposals.
+
+#### Documents
+
+| Method | Path                        | Description                   |
+| :----- | :-------------------------- | :---------------------------- |
+| `GET`  | `/proposals/documents`      | List documents for a location |
+| `POST` | `/proposals/documents/send` | Send document to a client     |
+
+#### Templates
+
+| Method | Path                        | Description                      |
+| :----- | :-------------------------- | :------------------------------- |
+| `GET`  | `/proposals/templates`      | List document/contract templates |
+| `POST` | `/proposals/templates/send` | Send template to a client        |
+
+---
+
+### 3.13 Users
+
+User management with scopes and permissions.
+
+#### Users (Core)
+
+| Method   | Path              | Description |
+| :------- | :---------------- | :---------- |
+| `GET`    | `/users/{userId}` | Get user    |
+| `POST`   | `/users/`         | Create user |
+| `PUT`    | `/users/{userId}` | Update user |
+| `DELETE` | `/users/{userId}` | Delete user |
+
+#### Search
+
+| Method | Path                            | Description           |
+| :----- | :------------------------------ | :-------------------- |
+| `GET`  | `/users/search`                 | Search users          |
+| `POST` | `/users/search/filter-by-email` | Search users by email |
+
+**User Scopes (as of 2026-06-15):**  Includes `pipelines.create` scopes for opportunity pipeline management.
+
+---
+
+### 3.14 LC Phone
+
+Phone system management — numbers, pools, and purchasing.
+
+| Method | Path                              | Description                             |
+| :----- | :-------------------------------- | :-------------------------------------- |
+| `GET`  | `/phone-system/number-pools`      | List number pools (query: `locationId`) |
+| `GET`  | `/phone-system/available-numbers` | List available numbers for a country    |
+| `POST` | `/phone-system/purchase`          | Purchase number for location            |
+| `GET`  | `/phone-system/active-numbers`    | List active numbers                     |
+
+---
+
+## 4. Recent Changelog
+
+### 2026-06-26 — Opportunities Pipelines
+
+- **Added:**  `POST/GET/PUT/DELETE /opportunities/pipelines` — full pipeline CRUD
+
+### 2026-06-18 — Ad Publishing & SaaS
+
+- `GET /ad-publishing/facebook/campaigns/{id}/publishing-progress`
+- **Added:**  `GET /saas/allow-attach-rebilling/{locationId}`
+
+### 2026-06-15 — Users: pipelines.create scope
+
+- Added `pipelines.create` scope to `POST /users/`, `GET /users/search`, `POST /users/search/filter-by-email`, `GET /users/{userId}`, `PUT /users/{userId}`
+
+### 2026-06-12 — Ad Publishing
+
+- `GET /ad-publishing/facebook/reporting/list` — `campaignId` query param is now optional
+
+### 2026-06-11 — Brand Boards v2
+
+- **Added:**  Brand Voices CRUD at `/brand-boards/locations/{locationId}/brand-voices/`
+- **Deprecated:**  Public v1 paths ( `/brand-boards/public/v1/...`) removed
+
+---
+
+## 5. Appendix
+
+### Base URL
+
+```plain
+https://services.leadconnectorhq.com
+```
+
+### Common Request Headers
+
+```http
+Authorization: Bearer <TOKEN>
+Version: v3
+Content-Type: application/json
+Accept: application/json
+```
+
+### Standard Success Envelope (v3)
+
+```json
+{
+  "status": "success",
+  "data": { ... },
+  "message": "Operation completed",
+  "statusCode": 200
+}
+```
+
+### Auth Methods per Endpoint
+
+Most endpoints accept both:
+
+- **OAuth Access Token** — with Sub-Account or Agency user type
+- **Private Integration Token (PIT)**  — Sub-Account level
+
+### SDK Methods Pattern
+
+Every REST resource maps to an SDK service:
+
+```javascript
+highLevel.contacts.searchContactsAdvanced({ ... })
+highLevel.opportunities.createOpportunity({ ... })
+highLevel.conversations.sendNewMessage({ ... })
+```
+
+### Key Documentation Links
+
+- [SDK Docs](https://marketplace.gohighlevel.com/docs/sdk/node)
+- [OAuth / External Auth](https://marketplace.gohighlevel.com/docs/oauth/external-auth/)
+- [Changelog](https://marketplace.gohighlevel.com/docs/Changelog)
+- [GitHub SDK](https://github.com/GoHighLevel/highlevel-api-sdk)
+- [npm Package](https://www.npmjs.com/package/@gohighlevel/api-client)
+- [SDK Examples](https://github.com/GoHighLevel/ghl-sdk-examples/tree/main/node)
+
+---
+
+> **Document generated from official GHL Marketplace API documentation.**\
+> For the most up-to-date endpoint details, always refer to the [official changelog](https://marketplace.gohighlevel.com/docs/Changelog).
