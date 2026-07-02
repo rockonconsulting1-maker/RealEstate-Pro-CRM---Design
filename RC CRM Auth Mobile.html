@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RC CRM · Auth — Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* RC CRM tokens */
+:root {
+  --bg:           oklch(0.985 0.004 85);
+  --bg-sunk:      oklch(0.965 0.005 85);
+  --bg-deep:      oklch(0.945 0.006 85);
+  --surface:      #ffffff;
+  --ink:          oklch(0.20 0.015 260);
+  --ink-2:        oklch(0.40 0.012 260);
+  --ink-3:        oklch(0.58 0.010 260);
+  --ink-4:        oklch(0.72 0.008 260);
+  --border:       oklch(0.90 0.006 260);
+  --border-2:     oklch(0.94 0.005 260);
+  --brand:        oklch(0.54 0.165 254);
+  --brand-soft:   oklch(0.955 0.028 254);
+  --brand-ink:    oklch(0.42 0.16 254);
+  --success:      oklch(0.60 0.15 150);
+  --success-soft: oklch(0.955 0.04 150);
+  --r-sm: 6px; --r: 10px; --r-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(25,30,45,0.05), 0 1px 1px rgba(25,30,45,0.03);
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg-sunk);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+}
+
+/* ── Stage ────────────────────────────────────────────────── */
+.stage {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 80px;
+  gap: 24px;
+}
+.intro {
+  max-width: 440px; text-align: center;
+  color: oklch(0.40 0.012 260);
+  font-size: 13px; line-height: 1.5;
+}
+.intro h1 {
+  margin: 0 0 6px; font-size: 17px; font-weight: 600;
+  color: var(--ink); letter-spacing: -0.01em;
+}
+
+/* ── Screen switcher ──────────────────────────────────────── */
+.snav-wrap {
+  width: 100%; max-width: 440px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.snav-group { display: flex; flex-direction: column; gap: 5px; }
+.snav-lbl {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: oklch(0.55 0.01 260);
+  padding-left: 2px;
+}
+.snav-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.spill {
+  padding: 5px 11px; border-radius: 999px;
+  font-family: var(--font); font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--surface); color: oklch(0.40 0.012 260);
+}
+.spill:hover  { border-color: var(--ink-4); }
+.spill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ── Mobile auth form styles ──────────────────────────────── */
+.m-screen {
+  height: 100%; overflow-y: auto;
+  background: var(--bg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+}
+.m-scroll {
+  padding: 68px 22px 52px;
+  display: flex; flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+}
+.m-scroll.centered {
+  align-items: center; justify-content: center;
+  text-align: center;
+}
+
+/* back arrow row */
+.m-back {
+  display: flex; align-items: center;
+  margin-bottom: -8px; margin-top: -4px;
+}
+.m-back-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none; cursor: pointer;
+  color: var(--brand); font-family: var(--font);
+  font-size: 15px; font-weight: 500; padding: 0;
+  letter-spacing: -0.01em;
+}
+
+/* brand mark */
+.m-mark {
+  width: 42px; height: 42px; border-radius: 11px;
+  background: var(--ink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; letter-spacing: '-0.04em';
+  flex: none;
+}
+
+/* headings */
+.m-head { display: flex; flex-direction: column; gap: 4px; }
+.m-h1 {
+  margin: 0; font-size: 28px; font-weight: 700;
+  letter-spacing: -0.02em; color: var(--ink); line-height: 1.1;
+}
+.m-sub { font-size: 14px; color: var(--ink-3); line-height: 1.5; margin: 0; }
+
+/* form */
+.m-form { display: flex; flex-direction: column; gap: 16px; }
+.m-fgroup { display: flex; flex-direction: column; gap: 6px; }
+.m-label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+
+.m-input {
+  width: 100%; height: 46px; padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  font-family: var(--font); font-size: 15px; color: var(--ink);
+  outline: none; transition: border-color 120ms;
+  -webkit-appearance: none;
+}
+.m-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.m-input::placeholder { color: var(--ink-4); }
+
+/* password wrap */
+.m-pwrap { position: relative; }
+.m-pwrap .m-input { padding-right: 48px; }
+.m-peye {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-3); padding: 4px;
+  display: flex; align-items: center; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* strength */
+.m-strack {
+  height: 3px; border-radius: 999px;
+  background: var(--bg-deep); overflow: hidden; margin-top: 8px;
+}
+.m-sfill { height: 100%; border-radius: 999px; transition: width 200ms, background 200ms; }
+.m-slabel { font-size: 12px; margin-top: 5px; font-weight: 500; }
+
+/* primary button */
+.m-btn {
+  width: 100%; height: 50px;
+  background: var(--ink); color: #fff;
+  border: none; border-radius: var(--r);
+  font-family: var(--font); font-size: 15px; font-weight: 600;
+  cursor: pointer; letter-spacing: -0.01em;
+  transition: background 120ms;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-btn:active { background: oklch(0.28 0.02 260); }
+
+/* link */
+.m-link {
+  background: none; border: none; padding: 0;
+  font-family: var(--font); font-size: 14px; font-weight: 500;
+  color: var(--brand); cursor: pointer; letter-spacing: -0.005em;
+}
+.m-link:hover { text-decoration: underline; }
+.m-link.muted { color: var(--ink-3); }
+
+/* divider */
+.m-divider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--ink-4); font-size: 13px;
+}
+.m-divider::before, .m-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-2);
+}
+
+/* tos */
+.m-tos {
+  font-size: 12px; color: var(--ink-3); line-height: 1.5; text-align: center;
+}
+
+/* icon circle */
+.m-icircle {
+  width: 68px; height: 68px; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx" data-plugins="transform-react-jsx-source" data-filename="ios-frame.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ── Icons ────────────────────────────────────────────────── */
+const EyeOpen = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+const EyeOff = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+const BackIcon = () => (
+  <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 1L1 8l7 7"/>
+  </svg>
+);
+const MailIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+);
+const CheckIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+/* ── Shared mobile components ─────────────────────────────── */
+function MPwField({ placeholder = 'Password', value, onChange }) {
+  const [show, setShow] = useState(false);
+  const controlled = value !== undefined;
+  return (
+    <div className="m-pwrap">
+      <input
+        type={show ? 'text' : 'password'}
+        className="m-input"
+        placeholder={placeholder}
+        {...(controlled ? { value, onChange } : {})}
+      />
+      <button type="button" className="m-peye" onClick={() => setShow(s => !s)} tabIndex={-1}>
+        {show ? <EyeOff /> : <EyeOpen />}
+      </button>
+    </div>
+  );
+}
+
+function MStrength({ pw }) {
+  if (!pw) return null;
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (pw.length >= 12) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  const config = s <= 1
+    ? { w: 22, color: 'oklch(0.60 0.21 25)',  label: 'Weak' }
+    : s <= 3
+    ? { w: 58, color: 'oklch(0.72 0.155 70)', label: 'Fair' }
+    : { w: 100, color: 'oklch(0.60 0.15 150)', label: 'Strong' };
+  return (
+    <>
+      <div className="m-strack"><div className="m-sfill" style={{ width: config.w + '%', background: config.color }} /></div>
+      <div className="m-slabel" style={{ color: config.color }}>{config.label}</div>
+    </>
+  );
+}
+
+function MF({ label, children }) {
+  return (
+    <div className="m-fgroup">
+      <span className="m-label">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function MBack({ go, to }) {
+  return (
+    <div className="m-back">
+      <button className="m-back-btn" onClick={() => go(to)}>
+        <BackIcon /> Back
+      </button>
+    </div>
+  );
+}
+
+/* ── Mobile screens ───────────────────────────────────────── */
+function MLoginScreen({ go }) {
+  return (
+    <div className="m-screen">
+      <div className="m-scroll">
+        <div className="m-mark">RC</div>
+
+        <div className="m-head">
+          <h1 className="m-h1">Welcome back</h1>
+          <p className="m-sub">Sign in to your RC CRM account</p>
+        </div>
+
+        <div className="m-form">
+          <MF label="Email address">
+            <input type="email" className="m-input" placeholder="you@brokerage.com" autoComplete="email" />
+          </MF>
+          <div>
+            <MF label="Password">
+              <MPwField placeholder="Enter your password" />
+            </MF>
+            <div style={{ textAlign: 'right', marginTop: 8 }}>
+              <button className="m-link" style={{ fontSize: 13 }} onClick={() => go('forgot')}>Forgot password?</button>
+            </div>
+          </div>
+        </div>
+
+        <button className="m-btn">Sign in</button>
+
+        <div className="m-divider">or</div>
+
+        <div style={{ textAlign: 'center', fontSize: 14, color: 'var(--ink-3)' }}>
+          New to RC CRM?{' '}
+          <button className="m-link" onClick={() => go('signup')}>Create an account</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MSignupScreen({ go }) {
+  const [pw, setPw] = useState('');
+  return (
+    <div className="m-screen">
+      <div className="m-scroll">
+        <MBack go={go} to="login" />
+
+        <div className="m-head">
+          <h1 className="m-h1">Create account</h1>
+          <p className="m-sub">Set up your RC CRM workspace</p>
+        </div>
+
+        <div className="m-form">
+          <MF label="Full name">
+            <input type="text" className="m-input" placeholder="Jane Smith" autoComplete="name" />
+          </MF>
+          <MF label="Email address">
+            <input type="email" className="m-input" placeholder="jane@smith.re" autoComplete="email" />
+          </MF>
+          <MF label="Phone">
+            <input type="tel" className="m-input" placeholder="(555) 000-0000" autoComplete="tel" />
+          </MF>
+          <MF label="Brokerage">
+            <input type="text" className="m-input" placeholder="Compass, eXp, KW…" />
+          </MF>
+          <MF label="Password">
+            <MPwField value={pw} onChange={e => setPw(e.target.value)} placeholder="At least 8 characters" />
+            <MStrength pw={pw} />
+          </MF>
+          <MF label="Confirm password">
+            <MPwField placeholder="Confirm your password" />
+          </MF>
+        </div>
+
+        <div>
+          <button className="m-btn" style={{ marginBottom: 12 }}>Create account</button>
+          <p className="m-tos">
+            By continuing you agree to our{' '}
+            <button className="m-link" style={{ fontSize: 12 }}>Terms</button> and{' '}
+            <button className="m-link" style={{ fontSize: 12 }}>Privacy Policy</button>.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MForgotScreen({ go }) {
+  return (
+    <div className="m-screen">
+      <div className="m-scroll">
+        <MBack go={go} to="login" />
+
+        <div className="m-head">
+          <h1 className="m-h1">Reset password</h1>
+          <p className="m-sub">Enter your email and we'll send a reset link. Check spam if it doesn't arrive in a minute.</p>
+        </div>
+
+        <div className="m-form">
+          <MF label="Email address">
+            <input type="email" className="m-input" placeholder="you@brokerage.com" autoComplete="email" />
+          </MF>
+        </div>
+
+        <button className="m-btn" onClick={() => go('check-email')}>Send reset link</button>
+      </div>
+    </div>
+  );
+}
+
+function MCheckEmailScreen({ go }) {
+  return (
+    <div className="m-screen">
+      <div className="m-scroll centered">
+        <div className="m-icircle" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
+          <MailIcon />
+        </div>
+
+        <div>
+          <h1 className="m-h1">Check your inbox</h1>
+          <p className="m-sub" style={{ marginTop: 8 }}>
+            We sent a reset link to{' '}
+            <strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>you@brokerage.com</strong>.
+            It expires in 30 minutes.
+          </p>
+        </div>
+
+        <div style={{ fontSize: 14, color: 'var(--ink-3)' }}>
+          Didn't get it?{' '}
+          <button className="m-link">Resend email</button>
+        </div>
+
+        <button className="m-link muted" onClick={() => go('login')}>← Back to sign in</button>
+      </div>
+    </div>
+  );
+}
+
+function MResetScreen({ go }) {
+  const [pw, setPw] = useState('');
+  return (
+    <div className="m-screen">
+      <div className="m-scroll">
+        <MBack go={go} to="forgot" />
+
+        <div className="m-head">
+          <h1 className="m-h1">New password</h1>
+          <p className="m-sub">Must be 8+ characters and different from previous passwords.</p>
+        </div>
+
+        <div className="m-form">
+          <MF label="New password">
+            <MPwField value={pw} onChange={e => setPw(e.target.value)} placeholder="At least 8 characters" />
+            <MStrength pw={pw} />
+          </MF>
+          <MF label="Confirm new password">
+            <MPwField placeholder="Confirm your password" />
+          </MF>
+        </div>
+
+        <button className="m-btn" onClick={() => go('changed')}>Update password</button>
+      </div>
+    </div>
+  );
+}
+
+function MChangedScreen({ go }) {
+  return (
+    <div className="m-screen">
+      <div className="m-scroll centered">
+        <div className="m-icircle" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
+          <CheckIcon />
+        </div>
+
+        <div>
+          <h1 className="m-h1">Password updated</h1>
+          <p className="m-sub" style={{ marginTop: 8 }}>
+            Your password has been changed. Sign in with your new credentials.
+          </p>
+        </div>
+
+        <button className="m-btn" style={{ maxWidth: 280 }} onClick={() => go('login')}>Sign in</button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Screen config ────────────────────────────────────────── */
+const MOBILE_SCREENS = {
+  login: MLoginScreen, signup: MSignupScreen, forgot: MForgotScreen,
+  'check-email': MCheckEmailScreen, reset: MResetScreen, changed: MChangedScreen,
+};
+
+const NAV_GROUPS = [
+  { label: 'Authentication', items: [
+    { id: 'login', label: 'Sign in' },
+    { id: 'signup', label: 'Create account' },
+  ]},
+  { label: 'Recovery', items: [
+    { id: 'forgot', label: 'Forgot password' },
+    { id: 'check-email', label: 'Check email' },
+    { id: 'reset', label: 'Reset password' },
+    { id: 'changed', label: 'Password changed' },
+  ]},
+];
+
+/* ── App ──────────────────────────────────────────────────── */
+function App() {
+  const [screen, setScreen] = useState('login');
+  const Screen = MOBILE_SCREENS[screen];
+
+  return (
+    <div className="stage">
+      {/* Intro */}
+      <div className="intro">
+        <h1>RC CRM — Auth Screens</h1>
+        <div>Mobile prototype · iPhone 15 bezel · light mode</div>
+      </div>
+
+      {/* Screen switcher */}
+      <div className="snav-wrap">
+        {NAV_GROUPS.map(({ label, items }) => (
+          <div key={label} className="snav-group">
+            <div className="snav-lbl">{label}</div>
+            <div className="snav-row">
+              {items.map(({ id, label: lbl }) => (
+                <button
+                  key={id}
+                  className={`spill${screen === id ? ' active' : ''}`}
+                  onClick={() => setScreen(id)}
+                >{lbl}</button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* iPhone bezel */}
+      <IOSDevice width={393} height={852}>
+        <Screen go={setScreen} />
+      </IOSDevice>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

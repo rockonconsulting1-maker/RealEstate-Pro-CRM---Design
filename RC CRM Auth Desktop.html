@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RC CRM · Auth — Desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           oklch(0.985 0.004 85);
+  --bg-sunk:      oklch(0.965 0.005 85);
+  --bg-deep:      oklch(0.945 0.006 85);
+  --surface:      #ffffff;
+  --ink:          oklch(0.20 0.015 260);
+  --ink-2:        oklch(0.40 0.012 260);
+  --ink-3:        oklch(0.58 0.010 260);
+  --ink-4:        oklch(0.72 0.008 260);
+  --border:       oklch(0.90 0.006 260);
+  --border-2:     oklch(0.94 0.005 260);
+  --brand:        oklch(0.54 0.165 254);
+  --brand-soft:   oklch(0.955 0.028 254);
+  --brand-ink:    oklch(0.42 0.16 254);
+  --success:      oklch(0.60 0.15 150);
+  --success-soft: oklch(0.955 0.04 150);
+  --r-sm: 6px; --r: 10px; --r-lg: 14px;
+  --shadow-3: 0 24px 60px rgba(25,30,45,0.14), 0 4px 12px rgba(25,30,45,0.05);
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg-sunk);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+  font-size: 14px;
+}
+
+/* ── Stage ────────────────────────────────────────────────── */
+.stage {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 44px 20px 60px;
+  gap: 22px;
+}
+
+/* ── Screen switcher ──────────────────────────────────────── */
+.snav {
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap; justify-content: center;
+}
+.snav-sep  { width: 1px; height: 16px; background: var(--border); margin: 0 6px; }
+.snav-lbl  {
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--ink-4); margin-right: 2px;
+}
+.spill {
+  padding: 5px 12px; border-radius: 999px;
+  font-family: var(--font); font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--surface); color: var(--ink-2);
+  transition: background 80ms;
+}
+.spill:hover  { border-color: var(--ink-4); color: var(--ink); }
+.spill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ── Card ─────────────────────────────────────────────────── */
+.card {
+  width: 100%; max-width: 860px;
+  display: grid; grid-template-columns: 300px 1fr;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  min-height: 520px;
+}
+
+/* ── Left brand panel ─────────────────────────────────────── */
+.left {
+  background: var(--ink);
+  padding: 44px 36px;
+  display: flex; flex-direction: column;
+  color: #fff;
+}
+
+/* ── Right form panel ─────────────────────────────────────── */
+.right {
+  padding: 44px 48px;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  overflow-y: auto;
+}
+.right.centered { text-align: center; align-items: center; justify-content: center; }
+
+/* ── Typography ───────────────────────────────────────────── */
+.eyebrow {
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--ink-3); margin-bottom: 6px;
+}
+.page-title {
+  margin: 0; font-size: 22px; font-weight: 700;
+  letter-spacing: -0.02em; color: var(--ink); line-height: 1.2;
+}
+.body-muted { font-size: 13px; color: var(--ink-3); line-height: 1.6; margin: 10px 0 0; }
+
+/* ── Form ─────────────────────────────────────────────────── */
+.fgroup  { display: flex; flex-direction: column; gap: 6px; }
+.flabel  { font-size: 12px; font-weight: 500; color: var(--ink-2); }
+.fgrid   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fstack  { display: flex; flex-direction: column; gap: 12px; }
+
+.finput {
+  width: 100%; height: 38px; padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-family: var(--font); font-size: 14px; color: var(--ink);
+  outline: none; transition: border-color 120ms;
+}
+.finput:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.finput::placeholder { color: var(--ink-4); }
+
+/* password wrapper */
+.pwrap { position: relative; }
+.pwrap .finput { padding-right: 40px; }
+.peye {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-3); padding: 4px;
+  display: flex; align-items: center; line-height: 1;
+}
+.peye:hover { color: var(--ink-2); }
+
+/* strength */
+.strack {
+  height: 3px; border-radius: 999px;
+  background: var(--bg-deep); overflow: hidden; margin-top: 6px;
+}
+.sfill { height: 100%; border-radius: 999px; transition: width 200ms, background 200ms; }
+.slabel { font-size: 11px; margin-top: 4px; font-weight: 500; }
+
+/* ── Buttons & links ──────────────────────────────────────── */
+.abtn {
+  width: 100%; height: 38px;
+  background: var(--ink); color: #fff;
+  border: none; border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; letter-spacing: -0.01em;
+  transition: background 120ms;
+}
+.abtn:hover { background: oklch(0.28 0.02 260); }
+
+.alink {
+  background: none; border: none; padding: 0;
+  font-family: var(--font); font-size: 13px; font-weight: 500;
+  color: var(--brand); cursor: pointer; letter-spacing: -0.005em;
+}
+.alink:hover { text-decoration: underline; }
+.alink.muted { color: var(--ink-3); }
+
+.adivider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--ink-4); font-size: 12px;
+}
+.adivider::before, .adivider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-2);
+}
+
+.tos {
+  margin: 0; font-size: 12px; color: var(--ink-3);
+  text-align: center; line-height: 1.5;
+}
+
+/* ── Icon circle (check-email, changed) ───────────────────── */
+.icircle {
+  width: 60px; height: 60px; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+/* ── Icons ────────────────────────────────────────────────── */
+const EyeOpen = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+const EyeOff = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+const MailIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+);
+const CheckIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+/* ── Password strength ────────────────────────────────────── */
+function calcStrength(pw) {
+  if (!pw) return { w: 0, color: 'transparent', label: '' };
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (pw.length >= 12) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  if (s <= 1) return { w: 22, color: 'oklch(0.60 0.21 25)',  label: 'Weak' };
+  if (s <= 3) return { w: 58, color: 'oklch(0.72 0.155 70)', label: 'Fair' };
+  return            { w: 100, color: 'oklch(0.60 0.15 150)', label: 'Strong' };
+}
+
+/* ── Shared components ────────────────────────────────────── */
+function PwField({ placeholder = 'Password', value, onChange }) {
+  const [show, setShow] = useState(false);
+  const controlled = value !== undefined;
+  return (
+    <div className="pwrap">
+      <input
+        type={show ? 'text' : 'password'}
+        className="finput"
+        placeholder={placeholder}
+        {...(controlled ? { value, onChange } : {})}
+      />
+      <button type="button" className="peye" onClick={() => setShow(s => !s)} tabIndex={-1}>
+        {show ? <EyeOff /> : <EyeOpen />}
+      </button>
+    </div>
+  );
+}
+
+function StrengthBar({ pw }) {
+  const { w, color, label } = calcStrength(pw);
+  if (!pw) return null;
+  return (
+    <>
+      <div className="strack"><div className="sfill" style={{ width: w + '%', background: color }} /></div>
+      <div className="slabel" style={{ color }}>{label}</div>
+    </>
+  );
+}
+
+function F({ label, children }) {
+  return (
+    <div className="fgroup">
+      <span className="flabel">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+/* ── Left brand panel ─────────────────────────────────────── */
+function LeftPanel() {
+  const dots = ['#ADB5BD','#74C0FC','#339AF0','#9775FA','#FAB005','#40C057'];
+  return (
+    <div className="left">
+      {/* Brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 44 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8, flex: 'none',
+          background: 'rgba(255,255,255,0.13)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 700, fontSize: 13, letterSpacing: '-0.04em',
+        }}>RC</div>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14, letterSpacing: '-0.02em', lineHeight: 1.1 }}>Realtor Command</div>
+          <div style={{ fontSize: 10.5, opacity: 0.38, marginTop: 2, letterSpacing: '0.06em', textTransform: 'uppercase' }}>CRM</div>
+        </div>
+      </div>
+
+      {/* Tagline */}
+      <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.22, letterSpacing: '-0.025em', marginBottom: 32 }}>
+        Your pipeline.<br />Every deal.<br />Always on.
+      </div>
+
+      {/* Feature list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {['Pipeline at a glance', 'Offer countdowns, automatic', 'Field-ready on iPhone'].map(t => (
+          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.58)' }}>
+            <div style={{
+              width: 16, height: 16, borderRadius: '50%', flex: 'none',
+              border: '1.5px solid rgba(255,255,255,0.22)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="7" height="6" viewBox="0 0 7 6" fill="none">
+                <path d="M1 3L2.8 5 6 1" stroke="rgba(255,255,255,0.65)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            {t}
+          </div>
+        ))}
+      </div>
+
+      {/* Stage dots */}
+      <div style={{ marginTop: 'auto', marginBottom: 18 }}>
+        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.28)', marginBottom: 9 }}>
+          Pipeline stages
+        </div>
+        <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+          {dots.map((c, i) => (
+            <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c, opacity: 0.78 }} />
+          ))}
+        </div>
+      </div>
+
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.24)' }}>© 2026 RC CRM</div>
+    </div>
+  );
+}
+
+/* ── Screens ──────────────────────────────────────────────── */
+function LoginScreen({ go }) {
+  return (
+    <div className="right">
+      <div>
+        <div className="eyebrow">Welcome back</div>
+        <h1 className="page-title">Sign in to RC CRM</h1>
+      </div>
+
+      <div className="fstack">
+        <F label="Email address">
+          <input type="email" className="finput" placeholder="you@brokerage.com" />
+        </F>
+        <div>
+          <F label="Password"><PwField placeholder="Enter your password" /></F>
+          <div style={{ textAlign: 'right', marginTop: 7 }}>
+            <button className="alink" style={{ fontSize: 12 }} onClick={() => go('forgot')}>Forgot password?</button>
+          </div>
+        </div>
+      </div>
+
+      <button className="abtn">Sign in</button>
+
+      <div className="adivider">or</div>
+
+      <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>
+        New to RC CRM?{' '}
+        <button className="alink" onClick={() => go('signup')}>Create an account</button>
+      </div>
+    </div>
+  );
+}
+
+function SignupScreen({ go }) {
+  const [pw, setPw] = useState('');
+  return (
+    <div className="right">
+      <div>
+        <div className="eyebrow">Get started</div>
+        <h1 className="page-title">Create your account</h1>
+      </div>
+
+      <div className="fstack">
+        <div className="fgrid">
+          <F label="Full name"><input type="text" className="finput" placeholder="Jane Smith" /></F>
+          <F label="Email address"><input type="email" className="finput" placeholder="jane@smith.re" /></F>
+        </div>
+        <div className="fgrid">
+          <F label="Phone"><input type="tel" className="finput" placeholder="(555) 000-0000" /></F>
+          <F label="Brokerage"><input type="text" className="finput" placeholder="Compass, eXp, KW…" /></F>
+        </div>
+        <F label="Password">
+          <PwField value={pw} onChange={e => setPw(e.target.value)} placeholder="At least 8 characters" />
+          <StrengthBar pw={pw} />
+        </F>
+        <F label="Confirm password"><PwField placeholder="Confirm your password" /></F>
+      </div>
+
+      <div>
+        <button className="abtn" style={{ marginBottom: 10 }}>Create account</button>
+        <p className="tos">
+          By continuing you agree to our{' '}
+          <button className="alink" style={{ fontSize: 12 }}>Terms</button>{' '}and{' '}
+          <button className="alink" style={{ fontSize: 12 }}>Privacy Policy</button>.
+        </p>
+      </div>
+
+      <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>
+        Already have an account?{' '}
+        <button className="alink" onClick={() => go('login')}>Sign in</button>
+      </div>
+    </div>
+  );
+}
+
+function ForgotScreen({ go }) {
+  return (
+    <div className="right">
+      <div>
+        <div className="eyebrow">Account recovery</div>
+        <h1 className="page-title">Reset your password</h1>
+        <p className="body-muted">
+          Enter your email and we'll send a reset link. Check your spam folder if it doesn't arrive within a minute.
+        </p>
+      </div>
+
+      <F label="Email address">
+        <input type="email" className="finput" placeholder="you@brokerage.com" />
+      </F>
+
+      <button className="abtn" onClick={() => go('check-email')}>Send reset link</button>
+
+      <div style={{ textAlign: 'center' }}>
+        <button className="alink muted" onClick={() => go('login')}>← Back to sign in</button>
+      </div>
+    </div>
+  );
+}
+
+function CheckEmailScreen({ go }) {
+  return (
+    <div className="right centered">
+      <div className="icircle" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
+        <MailIcon />
+      </div>
+      <div>
+        <h1 className="page-title">Check your inbox</h1>
+        <p className="body-muted" style={{ margin: '10px 0 0' }}>
+          We sent a reset link to <strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>you@brokerage.com</strong>.
+          The link expires in 30 minutes.
+        </p>
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>
+        Didn't get it?{' '}
+        <button className="alink">Resend email</button>
+      </div>
+      <button className="alink muted" onClick={() => go('login')}>← Back to sign in</button>
+    </div>
+  );
+}
+
+function ResetScreen({ go }) {
+  const [pw, setPw] = useState('');
+  return (
+    <div className="right">
+      <div>
+        <div className="eyebrow">Account recovery</div>
+        <h1 className="page-title">Set a new password</h1>
+        <p className="body-muted">
+          Must be at least 8 characters and different from any previously used password.
+        </p>
+      </div>
+
+      <div className="fstack">
+        <F label="New password">
+          <PwField value={pw} onChange={e => setPw(e.target.value)} placeholder="At least 8 characters" />
+          <StrengthBar pw={pw} />
+        </F>
+        <F label="Confirm new password">
+          <PwField placeholder="Confirm your password" />
+        </F>
+      </div>
+
+      <button className="abtn" onClick={() => go('changed')}>Update password</button>
+    </div>
+  );
+}
+
+function ChangedScreen({ go }) {
+  return (
+    <div className="right centered">
+      <div className="icircle" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
+        <CheckIcon />
+      </div>
+      <div>
+        <h1 className="page-title">Password updated</h1>
+        <p className="body-muted" style={{ margin: '10px 0 0' }}>
+          Your password has been changed. You can now sign in with your new credentials.
+        </p>
+      </div>
+      <button className="abtn" style={{ maxWidth: 240 }} onClick={() => go('login')}>Sign in</button>
+    </div>
+  );
+}
+
+/* ── Nav config ───────────────────────────────────────────── */
+const SCREEN_MAP = {
+  login: LoginScreen, signup: SignupScreen, forgot: ForgotScreen,
+  'check-email': CheckEmailScreen, reset: ResetScreen, changed: ChangedScreen,
+};
+
+const NAV_GROUPS = [
+  { label: 'Authentication', items: [
+    { id: 'login', label: 'Sign in' },
+    { id: 'signup', label: 'Create account' },
+  ]},
+  { label: 'Recovery', items: [
+    { id: 'forgot', label: 'Forgot password' },
+    { id: 'check-email', label: 'Check email' },
+    { id: 'reset', label: 'Reset password' },
+    { id: 'changed', label: 'Password changed' },
+  ]},
+];
+
+/* ── App ──────────────────────────────────────────────────── */
+function App() {
+  const [screen, setScreen] = useState('login');
+  const Screen = SCREEN_MAP[screen];
+
+  return (
+    <div className="stage">
+      {/* Screen nav */}
+      <div className="snav">
+        {NAV_GROUPS.map(({ label, items }, gi) => (
+          <React.Fragment key={label}>
+            {gi > 0 && <div className="snav-sep" />}
+            <span className="snav-lbl">{label}</span>
+            {items.map(({ id, label: lbl }) => (
+              <button
+                key={id}
+                className={`spill${screen === id ? ' active' : ''}`}
+                onClick={() => setScreen(id)}
+              >{lbl}</button>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Card */}
+      <div className="card">
+        <LeftPanel />
+        <Screen go={setScreen} />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

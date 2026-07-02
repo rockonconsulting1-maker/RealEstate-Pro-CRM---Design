@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RC CRM — Screen & Modal Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:       oklch(0.985 0.004 85);
+    --bg-sunk:  oklch(0.965 0.005 85);
+    --bg-deep:  oklch(0.945 0.006 85);
+    --surface:  #ffffff;
+    --ink:      oklch(0.20 0.015 260);
+    --ink-2:    oklch(0.40 0.012 260);
+    --ink-3:    oklch(0.58 0.010 260);
+    --ink-4:    oklch(0.72 0.008 260);
+    --border:   oklch(0.90 0.006 260);
+    --border-2: oklch(0.94 0.005 260);
+    --brand:    oklch(0.54 0.165 254);
+    --brand-soft: oklch(0.955 0.028 254);
+    --success:  oklch(0.60 0.15 150);
+    --warning:  oklch(0.72 0.155 70);
+    --danger:   oklch(0.60 0.21 25);
+    --font: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink-2);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 80px;
+  }
+
+  /* ── Layout ── */
+  .doc {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    padding: 48px 0 36px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .cover-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--brand); margin-bottom: 10px;
+  }
+  .cover h1 {
+    font-size: 30px; font-weight: 700; letter-spacing: -0.025em;
+    color: var(--ink); margin-bottom: 8px;
+  }
+  .cover-sub {
+    font-size: 14px; color: var(--ink-3); margin-bottom: 24px;
+  }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 0;
+  }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .stat-chip .num {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums; color: var(--ink);
+  }
+  .stat-chip .lbl {
+    font-size: 12px; color: var(--ink-3); margin-top: 1px;
+  }
+  .stat-chip .dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+
+  /* ── Section headers ── */
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--ink-3);
+    padding: 0 0 10px;
+    margin-bottom: 0;
+  }
+  .surface-heading {
+    display: flex; align-items: center; gap: 12px;
+    margin: 40px 0 20px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--border);
+  }
+  .surface-heading h2 {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+  }
+  .surface-heading .badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 999px; letter-spacing: 0.04em;
+  }
+  .badge-mobile  { background: oklch(0.96 0.03 254); color: var(--brand); }
+  .badge-desktop { background: oklch(0.96 0.04 310); color: oklch(0.42 0.15 310); }
+  .badge-auth    { background: oklch(0.96 0.04 30);  color: oklch(0.42 0.13 30);  }
+
+  /* ── Category blocks ── */
+  .cat-block {
+    margin-bottom: 28px;
+  }
+  .cat-label {
+    font-size: 11px; font-weight: 600; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 8px; padding-left: 2px;
+  }
+
+  /* ── Screen table ── */
+  .screen-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .screen-table thead tr {
+    background: var(--bg-sunk);
+    border-bottom: 1px solid var(--border);
+  }
+  .screen-table th {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--ink-3);
+    padding: 9px 14px; text-align: left;
+  }
+  .screen-table th:last-child { text-align: center; width: 96px; }
+  .screen-table td {
+    padding: 10px 14px; font-size: 13px; color: var(--ink-2);
+    border-bottom: 1px solid var(--border-2);
+  }
+  .screen-table tr:last-child td { border-bottom: none; }
+  .screen-table tr:hover td { background: var(--bg-sunk); }
+  .screen-table td:last-child { text-align: center; }
+
+  .row-name { font-weight: 600; color: var(--ink); font-size: 13px; }
+  .row-file { font-family: var(--mono); font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+  .row-notes { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+  /* ── Status badges ── */
+  .status {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11.5px; font-weight: 600; padding: 3px 9px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .s-done    { background: oklch(0.96 0.04 150); color: oklch(0.38 0.13 150); }
+  .s-stub    { background: oklch(0.97 0.04 70);  color: oklch(0.50 0.16 70);  }
+  .s-missing { background: oklch(0.97 0.03 25);  color: oklch(0.48 0.18 25);  }
+
+  /* ── Gaps / suggestions section ── */
+  .missing-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 2px solid var(--border);
+  }
+  .missing-section h2 {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .missing-section .sub {
+    font-size: 13px; color: var(--ink-3); margin-bottom: 24px;
+  }
+
+  .missing-block {
+    margin-bottom: 24px;
+  }
+  .missing-block h3 {
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .missing-block h3::after {
+    content: ''; flex: 1; height: 1px; background: var(--border-2);
+  }
+
+  .missing-list {
+    list-style: none; display: flex; flex-direction: column; gap: 6px;
+  }
+  .missing-list li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .missing-list li.priority-3   { border-left: 3px solid oklch(0.55 0.08 260); }
+  .missing-list li.priority-sug { border-left: 3px solid oklch(0.55 0.12 180); }
+
+  .ml-num {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    color: var(--ink-4); min-width: 20px; padding-top: 1px;
+  }
+  .ml-name { font-weight: 600; color: var(--ink); }
+  .ml-desc { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .ml-tag {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 10.5px; font-weight: 600; padding: 2px 7px;
+    border-radius: 999px; align-self: flex-start; margin-top: 1px;
+  }
+  .tag-mobile  { background: oklch(0.96 0.03 254); color: var(--brand); }
+  .tag-desktop { background: oklch(0.96 0.04 310); color: oklch(0.42 0.15 310); }
+  .tag-both    { background: var(--bg-deep);       color: var(--ink-3); }
+
+  /* ── Priority legend ── */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-bottom: 18px; font-size: 12px; color: var(--ink-3);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border-2); margin: 24px 0; }
+
+  /* ── Sticky nav ── */
+  .sticky-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: oklch(0.985 0.004 85 / 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 28px;
+    display: flex; align-items: center; gap: 20px;
+    font-size: 12px;
+  }
+  .sticky-nav a {
+    color: var(--ink-3); text-decoration: none; font-weight: 500;
+    padding: 4px 0;
+  }
+  .sticky-nav a:hover { color: var(--brand); }
+  .sticky-nav .divider { color: var(--border); }
+
+  @media print {
+    .sticky-nav { display: none; }
+    body { background: white; }
+    .screen-table { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="sticky-nav">
+  <span style="font-weight:700;color:var(--ink);font-size:12.5px;">RC CRM Inventory</span>
+  <span class="divider">|</span>
+  <a href="#mobile">Mobile</a>
+  <a href="#desktop">Desktop</a>
+  <a href="#auth">Auth</a>
+  <a href="#missing">Gaps &amp; suggestions</a>
+  <div style="flex:1"></div>
+  <span style="color:var(--ink-4);font-family:var(--mono);font-size:11px;">Audited July 1, 2026</span>
+</nav>
+
+<div class="doc">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-eyebrow">RC CRM · v0.05 Prototype Audit</div>
+    <h1>Screen &amp; Modal Inventory</h1>
+    <div class="cover-sub">Cross-referenced against design.md, both HTML prototypes, and all mobile/ and desktop/ source files. Every screen, view, tab, modal, sheet, and auth flow is catalogued with implementation status and source file. Auth screens tracked in a dedicated section.</div>
+
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div><div class="num">50</div><div class="lbl">Mobile screens &amp; sheets</div></div>
+      </div>
+      <div class="stat-chip">
+        <div><div class="num">41</div><div class="lbl">Desktop screens &amp; modals</div></div>
+      </div>
+      <div class="stat-chip">
+        <div><div class="num">10</div><div class="lbl">Auth screens</div></div>
+      </div>
+      <div class="stat-chip">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="dot" style="background:oklch(0.60 0.15 150)"></div>
+          <div><div class="num" style="color:oklch(0.38 0.13 150)">100</div><div class="lbl">Fully implemented</div></div>
+        </div>
+      </div>
+      <div class="stat-chip">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="dot" style="background:oklch(0.72 0.155 70)"></div>
+          <div><div class="num" style="color:oklch(0.50 0.16 70)">1</div><div class="lbl">Stubbed / incomplete</div></div>
+        </div>
+      </div>
+      <div class="stat-chip">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="dot" style="background:oklch(0.60 0.21 25)"></div>
+          <div><div class="num" style="color:oklch(0.48 0.18 25)">15</div><div class="lbl">Gaps &amp; suggestions</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ MOBILE ══════════════ -->
+  <div id="mobile" class="surface-heading">
+    <h2>Mobile</h2>
+    <span class="badge badge-mobile">iPhone 15 · 393 × 852</span>
+    <span style="font-size:12px;color:var(--ink-4);margin-left:auto">RC CRM Mobile.html</span>
+  </div>
+
+  <!-- MOBILE: MAIN SCREENS -->
+  <div class="cat-block">
+    <div class="cat-label">Main screens (router)</div>
+    <table class="screen-table">
+      <thead><tr><th>Screen / ID</th><th>Description</th><th>Source file</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row-name">Dashboard <code style="font-size:10px;color:var(--ink-4)">dash</code></div><div class="row-notes">NextAppt hero, stat scroll, attention widget, new leads, pending offers, activity feed w/ filter chips</div></td><td>Full implementation. Activity chips are visual-only (no real filter).</td><td><div class="row-file">screen-dashboard.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Leads — List <code style="font-size:10px;color:var(--ink-4)">leads</code></div><div class="row-notes">FilterChipRow, SwipeRow cards, role badges, budget/target</div></td><td>Full implementation. Card button routes to <code>leadDetailBuyer</code> or <code>leadDetailSeller</code> based on role.</td><td><div class="row-file">screen-leads.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Leads — Kanban <code style="font-size:10px;color:var(--ink-4)">leadsBoard</code></div><div class="row-notes">Vertical stacked lanes, stage dot + count + value</div></td><td>Full implementation.</td><td><div class="row-file">screen-leads.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Lead Detail — Buyer <code style="font-size:10px;color:var(--ink-4)">leadDetailBuyer</code></div><div class="row-notes">Tabs: Buyer Info · Properties · Appointments · Tasks · Notes · Activity</div></td><td>All 6 tabs have content. Convert to Client CTA wired to sheet.</td><td><div class="row-file">screen-lead-detail.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Lead Detail — Seller <code style="font-size:10px;color:var(--ink-4)">leadDetailSeller</code></div><div class="row-notes">Tabs: Seller Info · Properties · Appointments · Tasks · Notes · Activity</div></td><td>All 6 tabs have content.</td><td><div class="row-file">screen-lead-detail.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Clients — Kanban <code style="font-size:10px;color:var(--ink-4)">clients</code></div><div class="row-notes">Buyer / Seller pipeline toggle, collapsible lanes</div></td><td>Full implementation. Lane cards route to the correct detail screen by role.</td><td><div class="row-file">screen-clients.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Buyer <code style="font-size:10px;color:var(--ink-4)">clientDetailBuyer</code></div><div class="row-notes">Tabs: Buyer · Properties · Offers · Appointments · Tasks · Notes · Activity</div></td><td>All 7 tabs have content.</td><td><div class="row-file">screen-client-detail.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Seller <code style="font-size:10px;color:var(--ink-4)">clientDetailSeller</code></div><div class="row-notes">Tabs: Seller · Property · Offers · Appointments · Tasks · Notes · Activity</div></td><td>All 7 tabs have content.</td><td><div class="row-file">screen-client-detail.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Vendor <code style="font-size:10px;color:var(--ink-4)">clientDetail</code></div><div class="row-notes">Tabs: Details · Engagements · Notes · Activity</div></td><td>All 4 tabs fully implemented. Exclusively serves the vendor role.</td><td><div class="row-file">screen-clients.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Both <code style="font-size:10px;color:var(--ink-4)">clientDetailBoth</code></div><div class="row-notes">Tabs: Overview · Buyer · Seller · Properties · Offers · Appointments · Tasks · Notes · Activity. Buyer + Seller panels stack vertically.</div></td><td>Full implementation. All 9 tabs have content; tasks and notes carry a Buyer/Seller role chip.</td><td><div class="row-file">screen-client-detail-both.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Properties — List <code style="font-size:10px;color:var(--ink-4)">props</code></div><div class="row-notes">Photo cards with stage badge, price, beds/baths/sqft</div></td><td>Full implementation.</td><td><div class="row-file">screen-props-offers.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Properties — Stages <code style="font-size:10px;color:var(--ink-4)">propsStages</code></div><div class="row-notes">Collapsible lane cards with photo, address, price, DOM</div></td><td>Full implementation. Collapse toggle works.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Properties — Map <code style="font-size:10px;color:var(--ink-4)">propsMap</code></div><div class="row-notes">Pin map, tap-to-select mini card, list sidebar</div></td><td>Full implementation. Mini card appears on pin tap and navigates to Property Detail.</td><td><div class="row-file">screen-props-offers.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Property Detail <code style="font-size:10px;color:var(--ink-4)">propDetail</code></div><div class="row-notes">Tabs: Overview · Contacts · Offers · Appts · Tasks · Notes · Activity · Files</div></td><td>All 8 tabs fully implemented.</td><td><div class="row-file">screen-props-offers.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">MLS Properties <code style="font-size:10px;color:var(--ink-4)">mlsProps</code></div><div class="row-notes">MLS listing database. Address/city/MLS# search bar. Type filter chips (All / Detached / Semi-Detached / Condo / Townhouse). 15 live listings with status badge, DOM, beds/baths/sqft.</div></td><td>Full implementation. Search and type filter are live. Clear filters action.</td><td><div class="row-file">screen-mls.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Documents <code style="font-size:10px;color:var(--ink-4)">documents</code></div><div class="row-notes">Document vault landing: icon lockup, "Coming Soon" pill, preview category list (Listing Agreements / Offer Documents / Inspection Reports / Client Files / MLS Sheets) at 50% opacity.</div></td><td>Coming Soon stub — categories shown disabled, no internal navigation.</td><td><div class="row-file">screen-documents.jsx</div></td><td><span class="status s-stub">◐ Stub</span></td></tr>
+        <tr><td><div class="row-name">Offers — By Status <code style="font-size:10px;color:var(--ink-4)">offers</code></div><div class="row-notes">Active negotiations, Submitted, Accepted, Expired groups</div></td><td>Full implementation. Group-by toggle navigates to sibling screens.</td><td><div class="row-file">screen-props-offers.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Offers — By Property <code style="font-size:10px;color:var(--ink-4)">offersByProp</code></div><div class="row-notes">Grouped accordion by address, offer cards with countdown</div></td><td>Full implementation.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Offers — By Client <code style="font-size:10px;color:var(--ink-4)">offersByClient</code></div><div class="row-notes">Grouped accordion by client name</div></td><td>Full implementation.</td><td><div class="row-file">screen-props-offers.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Offer Detail <code style="font-size:10px;color:var(--ink-4)">offerDetail</code></div><div class="row-notes">Tabs: Details · Timeline · Contacts · Documents. Sticky action bar (context-sensitive)</div></td><td>All 4 tabs fully implemented.</td><td><div class="row-file">screen-props-offers.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Agenda <code style="font-size:10px;color:var(--ink-4)">calendar</code></div><div class="row-notes">Infinite scroll by day, drive-time pills between events</div></td><td>Full implementation.</td><td><div class="row-file">screen-cal-tasks.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Day <code style="font-size:10px;color:var(--ink-4)">calDay</code></div><div class="row-notes">Hourly grid, current-time marker, event blocks with kind color</div></td><td>Full implementation.</td><td><div class="row-file">screen-calendar-full.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Week <code style="font-size:10px;color:var(--ink-4)">calWeek</code></div><div class="row-notes">7-column grid, day headers, event blocks</div></td><td>Full implementation.</td><td><div class="row-file">screen-calendar-full.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Month <code style="font-size:10px;color:var(--ink-4)">calMonth</code></div><div class="row-notes">7-column grid, event dots per day, mini-agenda for today</div></td><td>Full implementation. Tapping a day navigates to <code>calDay</code>.</td><td><div class="row-file">screen-calendar-full.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Event Detail <code style="font-size:10px;color:var(--ink-4)">calEventDetail</code></div><div class="row-notes">Tabs: Details · Contact · Notes. Drive time warning. Action bar.</div></td><td>Full implementation.</td><td><div class="row-file">screen-calendar-full.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Tasks — Today + Overdue <code style="font-size:10px;color:var(--ink-4)">tasks</code></div><div class="row-notes">Filter chips, swipe rows (reschedule/delete), section groups</div></td><td>Full implementation. Swipe actions show buttons.</td><td><div class="row-file">screen-cal-tasks.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Tasks — By Property <code style="font-size:10px;color:var(--ink-4)">tasksByProperty</code></div><div class="row-notes">Grouped by linked property, overdue badge</div></td><td>Full implementation.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Tasks — By Client <code style="font-size:10px;color:var(--ink-4)">tasksByClient</code></div><div class="row-notes">Grouped by linked client name</div></td><td>Full implementation.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notes — By Client <code style="font-size:10px;color:var(--ink-4)">notesByClient</code></div><div class="row-notes">Filter strip, note cards grouped by client</div></td><td>Full implementation.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notes — By Contact <code style="font-size:10px;color:var(--ink-4)">notesByContact</code></div><div class="row-notes">Notes grouped by contact name</div></td><td>Full implementation.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notes — By Tag <code style="font-size:10px;color:var(--ink-4)">notesByTag</code></div><div class="row-notes">Notes grouped by tag (#offer, #staging, etc.)</div></td><td>Full implementation.</td><td><div class="row-file">screen-tasks-notes.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Contacts Directory <code style="font-size:10px;color:var(--ink-4)">contacts</code></div><div class="row-notes">Alphabetical AZ groups, search, filter chips (All / Buyers / Sellers / Leads / Vendors / Partners), call &amp; text quick actions</div></td><td>Full implementation. Tapping a contact navigates to <code>contactDetail</code>.</td><td><div class="row-file">screen-contacts.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Contact Detail <code style="font-size:10px;color:var(--ink-4)">contactDetail</code></div><div class="row-notes">Avatar hero, role + source badges. 4-button quick-action row (Call / Text / Note / Book). Tabs: Overview · Activity · Notes. Deep-link to buyer/seller record.</div></td><td>Full implementation. All 3 tabs have content. Role-aware record links navigate to the correct client detail screen.</td><td><div class="row-file">screen-contacts.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Conversations — Inbox <code style="font-size:10px;color:var(--ink-4)">conversations</code></div><div class="row-notes">Channel filter chips (All / Phone / Email / Messenger / Review / Group SMS). Conversation rows with unread badge, avatar, and channel dot.</div></td><td>Full implementation. Tapping a row opens ConversationDetail inline; back button returns to list.</td><td><div class="row-file">screen-conversations.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Conversation Detail <code style="font-size:10px;color:var(--ink-4)">(sub-view)</code></div><div class="row-notes">Channel-adaptive: ChatBubbles (Email / Messenger / Group SMS) with date dividers + read receipts; PhoneLog + call-back + log-call actions (Phone); ReviewCard + public reply compose with live publish (Review).</div></td><td>Full implementation. ComposeBar wired for non-phone/review channels; hidden for Review. Group SMS shows per-sender name in bubbles.</td><td><div class="row-file">screen-conversations.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Search Screen</div><div class="row-notes">Live search: Leads, Clients, Properties, Offers. Recent searches. Browse by type.</div></td><td>Full implementation. Activated from TopBar search field.</td><td><div class="row-file">screen-dashboard.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Settings <code style="font-size:10px;color:var(--ink-4)">settings</code></div><div class="row-notes">Tabs: Profile · Preferences · Data. Agent card, notification toggles.</div></td><td>Full implementation.</td><td><div class="row-file">screen-settings.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MOBILE: SHEETS -->
+  <div class="cat-block">
+    <div class="cat-label">Bottom sheets &amp; modals</div>
+    <table class="screen-table">
+      <thead><tr><th>Sheet / ID</th><th>Description</th><th>Source file</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row-name">FAB Picker <code style="font-size:10px;color:var(--ink-4)">picker</code></div><div class="row-notes">4-column grid: Lead, Task, Note, Event, Client, Listing, Offer</div></td><td>Full implementation. Each tile routes to the appropriate creation sheet.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Lead <code style="font-size:10px;color:var(--ink-4)">lead</code></div><div class="row-notes">Name, Role (buyer/seller/investor), Phone, Budget, Source, Temperature</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Task <code style="font-size:10px;color:var(--ink-4)">task</code></div><div class="row-notes">Title, Due (quick picks + custom), Client/Lead, Property</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Note <code style="font-size:10px;color:var(--ink-4)">note</code></div><div class="row-notes">Body textarea, Client/Lead, Tags</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Event <code style="font-size:10px;color:var(--ink-4)">event</code></div><div class="row-notes">Type (showing/consult/inspect/offer/call), Title, Date, Time, Client, Property</div></td><td>Full implementation. Property field conditional on event type.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Client <code style="font-size:10px;color:var(--ink-4)">client</code></div><div class="row-notes">Name, Type (buyer/seller), Stage, Phone, Email, Budget/Pre-approval or Property/Price</div></td><td>Full implementation. Fields adapt by role.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Property <code style="font-size:10px;color:var(--ink-4)">property</code></div><div class="row-notes">Address, City, List price, Beds/Baths, Type, Stage, Seller client</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Offer <code style="font-size:10px;color:var(--ink-4)">offer</code></div><div class="row-notes">Side, Property, Client, Price, Deposit, Closing date, Irrevocable, Conditions</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Convert Lead → Client <code style="font-size:10px;color:var(--ink-4)">convertLead</code></div><div class="row-notes">Lead preview card, Client type, Starting stage, Carry-over notice</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notifications <code style="font-size:10px;color:var(--ink-4)">notifications</code></div><div class="row-notes">5 notifications, unread dots, mark-all-read, tap to dismiss</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Quick Note <code style="font-size:10px;color:var(--ink-4)">quickNote</code></div><div class="row-notes">Body, Client/Lead, Tags. Opened from action bar "Note" button.</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Task Detail / Edit <code style="font-size:10px;color:var(--ink-4)">taskDetail</code></div><div class="row-notes">Editable title, complete toggle, Due, Priority, Client, Property, Delete</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Note Detail / Edit <code style="font-size:10px;color:var(--ink-4)">noteDetail</code></div><div class="row-notes">Editable body, linked-to selector, tags, delete.</div></td><td>Full implementation.</td><td><div class="row-file">screen-modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════ DESKTOP ══════════════ -->
+  <div id="desktop" class="surface-heading">
+    <h2>Desktop</h2>
+    <span class="badge badge-desktop">1440 × 900 · sidebar + main</span>
+    <span style="font-size:12px;color:var(--ink-4);margin-left:auto">RC CRM Desktop.html</span>
+  </div>
+
+  <!-- DESKTOP: MAIN SCREENS -->
+  <div class="cat-block">
+    <div class="cat-label">Main screens (router)</div>
+    <table class="screen-table">
+      <thead><tr><th>Screen / ID</th><th>Description</th><th>Source file</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row-name">Dashboard <code style="font-size:10px;color:var(--ink-4)">dash</code></div><div class="row-notes">3-col: NextAppt + timeline, work queue, stats. Full activity feed.</div></td><td>Full implementation.</td><td><div class="row-file">desktop/dashboard.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Leads — List <code style="font-size:10px;color:var(--ink-4)">leads (view=list)</code></div><div class="row-notes">Filter chips, sortable table with stage dot, last contact, value</div></td><td>Full implementation.</td><td><div class="row-file">desktop/leads.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Leads — Board <code style="font-size:10px;color:var(--ink-4)">leads (view=board)</code></div><div class="row-notes">8-column horizontal kanban, role avatars, dense cards</div></td><td>Full implementation.</td><td><div class="row-file">desktop/leads.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Lead Detail <code style="font-size:10px;color:var(--ink-4)">leadDetail</code></div><div class="row-notes">Split-pane + standalone full-page. Tabs: Buyer/Seller Info · Properties · Appointments · Tasks · Notes · Activity · Files</div></td><td>Full implementation. All 7 tabs have content; Info tab adapts to buyer vs. seller role.</td><td><div class="row-file">desktop/leads.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Clients — Kanban <code style="font-size:10px;color:var(--ink-4)">clients</code></div><div class="row-notes">Pipeline toggle: Buyer · Seller · Vendors &amp; SOI</div></td><td>Full implementation. Vendor/SOI shows a list table.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Buyer <code style="font-size:10px;color:var(--ink-4)">clientDetail</code></div><div class="row-notes">Tabs: Overview · Properties · Offers · Tasks · Notes · Activity · Files</div></td><td>All 7 tabs fully implemented.</td><td><div class="row-file">desktop/screens3.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Seller <code style="font-size:10px;color:var(--ink-4)">clientDetailSeller</code></div><div class="row-notes">Pipeline: Pre-listing → Active → Offers In → Under Contract → Closed. Tabs: Overview · Listing · Offers · Tasks · Notes · Activity · Files</div></td><td>Full implementation. All 7 tabs have content.</td><td><div class="row-file">desktop/screens3.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Client Detail — Both <code style="font-size:10px;color:var(--ink-4)">clientDetailBoth</code></div><div class="row-notes">Tabs: Overview · Buyer · Seller · Properties · Offers · Tasks · Notes · Activity · Files. Buyer + Seller panels side-by-side in Overview.</div></td><td>Full implementation. All 9 tabs have content.</td><td><div class="row-file">desktop/screens4.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">My Listings — List <code style="font-size:10px;color:var(--ink-4)">myListings (view=list)</code></div><div class="row-notes">Photo thumbnail, address, stage, price, beds/baths/sqft/DOM</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">My Listings — Board <code style="font-size:10px;color:var(--ink-4)">myListings (view=board)</code></div><div class="row-notes">6-column kanban, photo placeholders, price, DOM</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">My Listings — Map <code style="font-size:10px;color:var(--ink-4)">myListings (view=map)</code></div><div class="row-notes">Split: list pane + pin map with stage-colored pills</div></td><td>Full implementation. Selected pin highlights.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">MLS Properties <code style="font-size:10px;color:var(--ink-4)">mlsProps</code></div><div class="row-notes">MLS database search. Address/city/MLS# search bar + filter row: Beds segmented (Any/2+/3+/4+/5+), Baths, Property type select, Max price select, Sort (DOM/Price ↑↓). 24 live listings table.</div></td><td>Full implementation. All filters live via useMemo. Clear all action. Rows navigate to propDetail.</td><td><div class="row-file">desktop/mls.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Property Detail <code style="font-size:10px;color:var(--ink-4)">propDetail</code></div><div class="row-notes">Tabs: Contacts · Offers · Showings · Tasks · Notes · Activity · Files</div></td><td>All 7 tabs fully implemented.</td><td><div class="row-file">desktop/screens3.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Offers — Table <code style="font-size:10px;color:var(--ink-4)">offers</code></div><div class="row-notes">Stat chips by status, full table (property/client/side/status/price/deposit/expiry)</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Offer Detail <code style="font-size:10px;color:var(--ink-4)">offerDetail</code></div><div class="row-notes">Tabs: Overview · Timeline · Documents</div></td><td>All 3 tabs fully implemented.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Week <code style="font-size:10px;color:var(--ink-4)">calendar (view=week)</code></div><div class="row-notes">8-col grid (time gutter + 7 days), today tinted, event blocks, today sidebar</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Day <code style="font-size:10px;color:var(--ink-4)">calendar (view=day)</code></div><div class="row-notes">Single-day hourly grid, utilization bar, today schedule sidebar</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens2.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Month <code style="font-size:10px;color:var(--ink-4)">calendar (view=month)</code></div><div class="row-notes">35-cell grid, event pills, +N more, today circle</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens2.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Calendar — Agenda <code style="font-size:10px;color:var(--ink-4)">calendar (view=agenda)</code></div><div class="row-notes">Day cards, event rows with kind badge, duration, client</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens2.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Tasks — By Due <code style="font-size:10px;color:var(--ink-4)">tasks (view=due)</code></div><div class="row-notes">3-column: Overdue · Today · Upcoming, task row with checkbox</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Tasks — By Client <code style="font-size:10px;color:var(--ink-4)">tasks (view=client)</code></div><div class="row-notes">Grouped cards by client, avatar, task count</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Tasks — By Property <code style="font-size:10px;color:var(--ink-4)">tasks (view=property)</code></div><div class="row-notes">Grouped cards by linked property</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notes — Recent <code style="font-size:10px;color:var(--ink-4)">notes (view=recent)</code></div><div class="row-notes">3-column card grid, tag badge, who + date</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notes — By Client <code style="font-size:10px;color:var(--ink-4)">notes (view=client)</code></div><div class="row-notes">Grouped by client, expandable note items</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notes — By Tag <code style="font-size:10px;color:var(--ink-4)">notes (view=tag)</code></div><div class="row-notes">2-column grid grouped by tag</div></td><td>Full implementation.</td><td><div class="row-file">desktop/screens.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Contacts <code style="font-size:10px;color:var(--ink-4)">contacts</code></div><div class="row-notes">Filter chips, search, alphabetical list, master-detail split on select</div></td><td>Full implementation. Preview pane shows contact card, recent activity timeline, role-aware actions.</td><td><div class="row-file">desktop/contacts.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Conversations <code style="font-size:10px;color:var(--ink-4)">conversations</code></div><div class="row-notes">Split-pane inbox: left thread list (340 px) with search + channel filter chips (All / SMS / Email / WhatsApp); right thread detail with chat bubbles + compose bar (textarea, send, Template / Attach / Listing link actions). Pinned thread indicator. Unread badge. Mark-as-read on selection.</div></td><td>Full implementation. Send appends bubble and updates preview row. <code>ConversationsTab</code> component also available for embedding in Lead/Client detail views.</td><td><div class="row-file">desktop/conversations.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Settings <code style="font-size:10px;color:var(--ink-4)">settings</code></div><div class="row-notes">Sections: Profile &amp; Account · Notifications · Display · Integrations</div></td><td>All 4 sections implemented.</td><td><div class="row-file">desktop/screens2.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DESKTOP: MODALS -->
+  <div class="cat-block">
+    <div class="cat-label">Modals &amp; popovers</div>
+    <table class="screen-table">
+      <thead><tr><th>Modal / ID</th><th>Description</th><th>Source file</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row-name">Quick Add Dispatcher <code style="font-size:10px;color:var(--ink-4)">quickAdd</code></div><div class="row-notes">2-col grid: Lead · Client · Property · Offer · Task · Note · Event</div></td><td>Full implementation. Each tile routes to the specific creation modal.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Lead <code style="font-size:10px;color:var(--ink-4)">lead</code></div><div class="row-notes">Name, Role toggle, Temperature, Phone, Email, Budget/Area, Source, Notes</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Client <code style="font-size:10px;color:var(--ink-4)">client</code></div><div class="row-notes">Name, Type, Stage, Phone, Email, Budget+Pre-approval or Property+Price</div></td><td>Full implementation. Fields adapt by role.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Property <code style="font-size:10px;color:var(--ink-4)">property</code></div><div class="row-notes">Address, City, Price, Beds/Baths/Sqft, Type, Stage, MLS#, Seller client</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Offer <code style="font-size:10px;color:var(--ink-4)">offer</code></div><div class="row-notes">Side, Property, Client, Price, Deposit, Closing, Irrevocable, Conditions, Status</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Task <code style="font-size:10px;color:var(--ink-4)">task</code></div><div class="row-notes">Title, Due quick-picks, Client, Property, Priority, Time</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Note <code style="font-size:10px;color:var(--ink-4)">note</code></div><div class="row-notes">Body textarea, Client/Lead, Tags</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">New Event <code style="font-size:10px;color:var(--ink-4)">event</code></div><div class="row-notes">Type, Title, Date, Time, Duration, Client, Property (conditional)</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Convert Lead → Client <code style="font-size:10px;color:var(--ink-4)">convertLead</code></div><div class="row-notes">Lead preview, Type, Stage, Representation date, Role-specific fields, Success state</div></td><td>Full implementation including post-conversion confirmation screen.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Notifications Popover</div><div class="row-notes">Fixed popover, 5 notifications, unread dots, mark-all-read, view all</div></td><td>Full implementation. Click-outside dismisses.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Event Detail Modal</div><div class="row-notes">Kind chip, time, duration, client, location, Add note + Edit actions</div></td><td>Full implementation. Opened by clicking calendar events.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Task Detail Modal</div><div class="row-notes">Editable title, complete toggle, due, priority, client, property, notes, delete</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Note Detail Modal</div><div class="row-notes">Editable body, linked-to selector, tags, delete</div></td><td>Full implementation.</td><td><div class="row-file">desktop/modals.jsx</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════ AUTH ══════════════ -->
+  <div id="auth" class="surface-heading">
+    <h2>Auth / Onboarding</h2>
+    <span class="badge badge-desktop">Desktop</span>
+    <span class="badge badge-mobile" style="margin-left:4px">Mobile</span>
+    <span style="font-size:12px;color:var(--ink-4);margin-left:auto">RC CRM Auth Desktop.html · RC CRM Auth Mobile.html</span>
+  </div>
+
+  <div class="cat-block">
+    <div class="cat-label">Desktop auth screens</div>
+    <table class="screen-table">
+      <thead><tr><th>Screen</th><th>Description</th><th>Source file</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row-name">Sign In</div><div class="row-notes">Left brand panel (tagline, features, stage dots). Email + password with show/hide eye toggle. Forgot password link. Sign up CTA. "Welcome back" eyebrow.</div></td><td>Full implementation. Password show/hide works. Routes to Forgot Password and Sign Up.</td><td><div class="row-file">RC CRM Auth Desktop.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Create Account</div><div class="row-notes">2-column name grid, email, brokerage, phone, password with live strength meter (Weak / Fair / Strong), ToS acceptance.</div></td><td>Full implementation. Strength bar updates as user types. Back link to Sign In.</td><td><div class="row-file">RC CRM Auth Desktop.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Forgot Password</div><div class="row-notes">Email field, "Send reset link" CTA, back to Sign In link</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Desktop.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Check Your Email</div><div class="row-notes">Mail icon circle, confirmation copy with redacted email address, resend link, back to Sign In</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Desktop.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Password Changed</div><div class="row-notes">Check icon circle, success confirmation copy, "Back to Sign In" CTA</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Desktop.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cat-block">
+    <div class="cat-label">Mobile auth screens (iPhone 15 bezel)</div>
+    <table class="screen-table">
+      <thead><tr><th>Screen</th><th>Description</th><th>Source file</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row-name">Sign In</div><div class="row-notes">RC mark, "Welcome back" h1, email + password fields with show/hide, forgot password, sign up CTA, "or" divider</div></td><td>Full implementation. Routes to Forgot Password and Sign Up.</td><td><div class="row-file">RC CRM Auth Mobile.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Create Account</div><div class="row-notes">First + last name, email, brokerage, phone, password with live strength bar, ToS. Full-screen scroll layout.</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Mobile.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Forgot Password</div><div class="row-notes">Back arrow, email field, "Send reset link" primary button</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Mobile.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Check Your Email</div><div class="row-notes">Mail icon circle, confirmation copy, resend link, back to Sign In</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Mobile.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+        <tr><td><div class="row-name">Password Changed</div><div class="row-notes">Check icon circle, success copy, "Sign in" CTA button</div></td><td>Full implementation.</td><td><div class="row-file">RC CRM Auth Mobile.html</div></td><td><span class="status s-done">✓ Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════ GAPS & SUGGESTIONS ══════════════ -->
+  <div id="missing" class="missing-section">
+    <h2>Gaps &amp; suggested screens</h2>
+    <div class="sub">Since the June 29 audit, 16 new screens were added: Conversations and MLS search on both surfaces, Documents stub, Contact Detail, and 5 auth screens on each platform. The 7 P3 brief items remain open. A second block below lists 8 suggested screens not currently in the brief that would round out the product.</div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:oklch(0.55 0.08 260)"></div>P3 — Design-brief feature, not yet started</div>
+      <div class="legend-item"><div class="legend-dot" style="background:oklch(0.55 0.12 180)"></div>Suggested — Not in brief; recommended next</div>
+      <div class="legend-item" style="margin-left:8px"><span class="ml-tag tag-mobile">Mobile</span></div>
+      <div class="legend-item"><span class="ml-tag tag-desktop">Desktop</span></div>
+      <div class="legend-item"><span class="ml-tag tag-both">Both</span></div>
+    </div>
+
+    <!-- P3 brief items -->
+    <div class="missing-block">
+      <h3>P3 — Design-brief features, not yet started</h3>
+      <ul class="missing-list">
+        <li class="priority-3">
+          <div class="ml-num">01</div>
+          <div style="flex:1">
+            <div class="ml-name">Dark mode</div>
+            <div class="ml-desc">design.md §2 states: "Dark mode is first-class. Agents use the app in the car at night." Neither surface has a dark theme. The Desktop Settings screen has a Theme toggle (Light/System/Dark) that does nothing.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+        <li class="priority-3">
+          <div class="ml-num">02</div>
+          <div style="flex:1">
+            <div class="ml-name">Desktop — Command Palette (⌘K)</div>
+            <div class="ml-desc">design.md §9.11 specifies a ⌘K overlay with two groups: Actions (New Lead, New Contact, etc.) and grouped search results (Contacts / Properties / Offers / Notes). The topbar search field exists but there is no keyboard shortcut handler.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+        <li class="priority-3">
+          <div class="ml-num">03</div>
+          <div style="flex:1">
+            <div class="ml-name">Desktop — Global Search results overlay</div>
+            <div class="ml-desc">The topbar search field in <code>desktop/shell.jsx</code> is decorative only. Typing does nothing. Needs a results dropdown/overlay grouped by type (Lead, Client, Property, Offer, Note) — similar to mobile's SearchScreen.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+        <li class="priority-3">
+          <div class="ml-num">04</div>
+          <div style="flex:1">
+            <div class="ml-name">Desktop — Offers: Side-by-side comparison view</div>
+            <div class="ml-desc">design.md §11.8: select 2+ offers on the same property → vertical column comparison layout showing Price / Deposit / Conditions / Closing / Deadline / Terms side by side. The Offers table has no multi-select and no comparison view.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+        <li class="priority-3">
+          <div class="ml-num">05</div>
+          <div style="flex:1">
+            <div class="ml-name">Desktop — Offer Detail: Negotiation timeline sparkline</div>
+            <div class="ml-desc">design.md §11.9: a vertical history of counters, revisions, and acceptances with the offer amount charted over time as a small sparkline. The Timeline tab currently shows a plain activity feed with no price chart.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+        <li class="priority-3">
+          <div class="ml-num">06</div>
+          <div style="flex:1">
+            <div class="ml-name">Desktop — Calendar: Conflict detection banner</div>
+            <div class="ml-desc">design.md §11.10: when two appointments overlap, a banner appears at the top of the week view with a one-click Reschedule action. Thursday Apr 17 has overlapping events that could demonstrate this.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+        <li class="priority-3">
+          <div class="ml-num">07</div>
+          <div style="flex:1">
+            <div class="ml-name">Desktop — Tasks: Bulk-edit table view + mini-calendar scheduler</div>
+            <div class="ml-desc">design.md §11.11: (1) a bulk-editable table view toggle and (2) a today's task scheduler mini-calendar above the list for dragging unscheduled tasks onto time slots. Neither exists.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Suggested screens -->
+    <div class="missing-block">
+      <h3>Suggested — Not in brief; recommended additions</h3>
+      <ul class="missing-list">
+        <li class="priority-sug">
+          <div class="ml-num">S1</div>
+          <div style="flex:1">
+            <div class="ml-name">Documents vault — full build</div>
+            <div class="ml-desc">The mobile stub shows the intent: a file browser linked to clients and listings, with category folders (Listing Agreements / Offer Docs / Inspection Reports / Client Files / MLS Sheets), upload action, and document preview. The Desktop currently surfaces Documents only inside record detail tabs; a top-level Documents screen is missing on both surfaces.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S2</div>
+          <div style="flex:1">
+            <div class="ml-name">Analytics &amp; reporting dashboard</div>
+            <div class="ml-desc">A dedicated reporting screen: GCI to date vs. annual goal, deal volume by month (sparkline or bar), pipeline conversion funnel (Lead → Client → UC → Closed), average DOM, and source attribution breakdown. The dashboard stat chips hint at this data but there is no drill-down report view.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S3</div>
+          <div style="flex:1">
+            <div class="ml-name">Commission calculator / deal P&amp;L</div>
+            <div class="ml-desc">Per-deal screen: sale price, commission rate, splits, referral fee, brokerage desk fee → net take-home. Useful for both previewing an offer and reconciling a closed deal. Could live as a tab inside Offer Detail or as a standalone calculator modal.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S4</div>
+          <div style="flex:1">
+            <div class="ml-name">Showing feedback collection</div>
+            <div class="ml-desc">After a showing event, a sheet or screen to log buyer agent feedback: interest level, price reaction, specific objections, likelihood to offer. Currently feedback is free-form in Notes with no structure. Could trigger automatically from a completed showing event.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S5</div>
+          <div style="flex:1">
+            <div class="ml-name">Open house check-in sheet</div>
+            <div class="ml-desc">A dedicated open house mode: fullscreen sign-in form (name, phone, email, "working with an agent?"), live visitor count, auto-create Lead records for each sign-in. Mobile is the natural surface — the agent hands their phone to visitors.</div>
+          </div>
+          <span class="ml-tag tag-mobile">Mobile</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S6</div>
+          <div style="flex:1">
+            <div class="ml-name">CMA / comparative market analysis viewer</div>
+            <div class="ml-desc">A read-only CMA view attached to a Seller client or Listing: comparable sales table (address, sale price, sqft, $/sqft, DOM, close date), price range summary, and suggested list price range. Feeds the listing presentation. Desktop-primary but useful as a reference on mobile during listing consults.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S7</div>
+          <div style="flex:1">
+            <div class="ml-name">Contact import (CSV upload)</div>
+            <div class="ml-desc">Onboarding and ongoing import flow: drag-and-drop CSV, column mapping step (Name / Phone / Email / Role / Source), duplicate detection, import summary. Desktop modal. An empty Contacts or Leads list with a prominent "Import contacts" CTA would surface this naturally.</div>
+          </div>
+          <span class="ml-tag tag-desktop">Desktop</span>
+        </li>
+        <li class="priority-sug">
+          <div class="ml-num">S8</div>
+          <div style="flex:1">
+            <div class="ml-name">Annual goal tracker</div>
+            <div class="ml-desc">Set and track GCI goal, deal count target, and listing target for the year. Shows progress rings or step indicators alongside pipeline stats. Could live inside Settings or as a pinnable widget on the dashboard. Gives the agent a north star number visible every day.</div>
+          </div>
+          <span class="ml-tag tag-both">Both</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- /doc -->
+</body>
+</html>
