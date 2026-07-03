@@ -14,6 +14,24 @@ Full list of directories and files in the repository with detailed summaries and
 - [design.md](./design.md): The Design System documentation. It defines the principles, color tokens (OKLCH), typography, spacing, component specs, and UI patterns used throughout the project.
 - [frontend-designs.md](./frontend-designs.md): A detailed breakdown of all screens, pages, and components for both Desktop and Mobile, including data fields for lists and forms.
 - [repo-structure.md](./repo-structure.md): This file; a comprehensive list and summary of every directory and file in the repository.
+- [AGENTS.md](./AGENTS.md): Agent instructions and guidelines for developers working on the RC CRM codebase.
+- [SCREENS.md](./SCREENS.md): A detailed inventory of all screens, views, and modals for both the Desktop and Mobile surfaces.
+- [mock-data.md](./mock-data.md): Comprehensive inventory of all mock data entities, their schemas, and the relationships between them.
+- [GHL_Integration_Mapping.md](./GHL_Integration_Mapping.md): Comprehensive mapping of every screen and UI component to the GoHighLevel (GHL) API and Database Schema.
+- [Real Estate Pro CRM — Full Integration Schema.txt](./Real%20Estate%20Pro%20CRM%20—%20Full%20Integration%20Schema.txt): Master legend of data types, technical schemas, and association graphs for the GHL integration.
+
+---
+
+## [GHL_Docs/](./GHL_Docs/)
+Detailed technical documentation for the GoHighLevel (GHL) backend integration.
+
+- [GoHighLevel (GHL) API Integration.txt](./GHL_Docs/GoHighLevel%20%28GHL%29%20API%20Integration.txt): Technical overview of the GHL v3 API, including authentication, base URLs, and SDK patterns.
+- [SECTION 1 — Object Catalog.md](./GHL_Docs/SECTION%201%20—%20Object%20Catalog.md): Classification of CRM data into First-Class Objects (Objects API) and Supporting/Child Standard Objects.
+- [SECTION 2 — DETAILED DATA DICTIONARY.md](./GHL_Docs/SECTION%202%20—%20DETAILED%20DATA%20DICTIONARY.md): Comprehensive technical schema for every database table, including field types, enums, and constraints.
+- [SECTION 3 — Tags, Custom Values & Custom Fields.md](./GHL_Docs/SECTION%203%20—%20Tags,%20Custom%20Values%20&%20Custom%20Fields.md): Documentation on the platform's schema extension mechanisms and segmentation architecture.
+- [SECTION 4 — Associations & Relationships Matrix.md](./GHL_Docs/SECTION%204%20—%20Associations%20&%20Relationships%20Matrix.md): Detailed mapping of cardinality, denormalization, and integrity rules for all entity relationships.
+- [SECTION 5 — Overall Schema Architecture Overview.md](./GHL_Docs/SECTION%205%20—%20Overall%20Schema%20%20Architecture%20Overview.md): High-level overview of multi-tenancy isolation, MongoDB patterns, and the event-driven API architecture.
+- [SECTION 6 — ERD Description.md](./GHL_Docs/SECTION%206%20—%20ERD%20Description.md): Visual layout guides and database diagrams in DBML and Mermaid formats.
 
 ---
 

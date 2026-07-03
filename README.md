@@ -48,3 +48,5 @@ To view the prototypes, simply open the following files in a modern web browser:
 - [Design Specification](design.md)
 - [Agent Instructions](AGENTS.md)
 - [Screen Inventory](SCREENS.md)
+- [GHL Integration Mapping](GHL_Integration_Mapping.md)
+- [Detailed Backend Schema (GHL_Docs)](./GHL_Docs/SECTION%201%20—%20Object%20Catalog.md)

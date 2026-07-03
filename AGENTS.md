@@ -41,3 +41,9 @@ Refer to `design.md` for the full specification. Key points:
 ## Testing
 - This is a prototype; there are no automated tests.
 - **Verification**: Always verify changes by checking the rendered output in both Desktop and Mobile HTML files. Ensure that "Tweaks" and "Jump to" menus remain functional.
+
+## GHL Integration & Data Mapping
+When implementing features that involve data persistence, API interactions, or state management, you MUST consult the following resources:
+- **[GHL Integration Mapping](GHL_Integration_Mapping.md)**: Use this to identify which UI components map to specific GHL API endpoints and custom object properties.
+- **[Detailed Backend Schema (GHL_Docs/)](./GHL_Docs/SECTION%201%20—%20Object%20Catalog.md)**: Refer to the Data Dictionary (Section 2) and Object Catalog (Section 1) for field types, enums, and relationship constraints.
+- **Data Persistence**: Ensure that any new data fields are compatible with the GHL schema defined in the `GHL_Docs/` directory.
