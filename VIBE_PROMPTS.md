@@ -14,15 +14,26 @@ LIVE DATA ONLY: All data comes from a GoHighLevel (GHL) sub-account via API (Pri
 
 STACK (locked): React 18, Vite, TypeScript strict, React Router v6, Tailwind + CSS-variable OKLCH tokens, shadcn/ui (Radix), TanStack Query v5, React Context, React Hook Form + Zod, lucide-react, recharts, date-fns, @supabase/supabase-js.
 
-DESIGN SOURCE OF TRUTH: https://github.com/rockonconsulting1-maker/RealEstate-Pro-CRM---Design
-- design.md — tokens (OKLCH), type scale, spacing, component specs, patterns
-- SCREENS.md + "RC CRM Screen Inventory.html" — full screen/modal inventory
-- frontend-designs.md — per-screen field breakdowns
-- RC CRM Desktop.html + /desktop/*.jsx — desktop implementations to port
-- RC CRM Mobile.html + /mobile/*.jsx — mobile implementations to port
-- RC CRM Auth Desktop.html / RC CRM Auth Mobile.html — auth screens
-- GHL_Integration_Mapping.md — screen→GHL endpoint/field mapping (FOLLOW THIS)
-- SECTION_1..SECTION_6 (schema docs) + GoHighLevel__GHL__API_Integration.txt — GHL data dictionary & API reference
+TWO REPOS — read the right doc for the task (AGENTS.md maps every task → doc across both):
+
+BUILD REPO (this repo, writable — where the app is built). Companion docs to follow:
+- PRD.md — product requirements (the what/why): scope, goals, non-goals, UX principles.
+- TASKS.md — phased, ordered engineering build plan (the how). Every prompt below maps to a TASK id.
+- PROMPT.md — this per-phase prompt series (paste Standing Context once, then the numbered prompt).
+- design.md — design system SOURCE OF TRUTH: OKLCH tokens, type scale, spacing, primitives, patterns, prototype file map.
+- GHL_Integration_Mapping.md — screen → GHL endpoint/field mapping (FOLLOW THIS for every data-wiring task).
+- Real Estate Pro CRM — Full Integration Schema.md — consolidated GHL data schema for this repo (object catalog, data dictionary, associations, ERD); the SECTION_1..6 docs are its source.
+
+DESIGN REPO (read-only reference): https://github.com/rockonconsulting1-maker/RealEstate-Pro-CRM---Design
+Read via the URL; never write to it. Prototype code is shape/interaction reference only — NOT production code.
+- SCREENS.md + "RC CRM Screen Inventory.html" — full screen/modal inventory (desktop, mobile, auth).
+- RC CRM Desktop.html / RC CRM Mobile.html / RC CRM Auth Desktop.html / RC CRM Auth Mobile.html — prototype entry points to port.
+- desktop/*.jsx — desktop implementations to port (shell.jsx, dashboard.jsx, contacts.jsx, leads.jsx, conversations.jsx, mls.jsx, modals.jsx, screens*.jsx) + styles.css.
+- mobile/*.jsx — mobile implementations to port (app.jsx = TabBar/FAB shell, screen-*.jsx per screen, data.jsx = SHAPE REFERENCE ONLY) + styles.css.
+- frontend-designs.md — per-screen field breakdowns (where present).
+- SECTION_1..SECTION_6 (granular schema docs) + GoHighLevel__GHL__API_Integration.txt + Associations_Apis-*.md — GHL data dictionary & API/associations reference.
+- Buyer-Seller-Journeys.md — pipeline stages, stage-mapped tasks & documents, client-portal plan.
+- Supabase_Intergration_Docs.txt — Supabase auth/config reference.
 
 GHL: base https://services.leadconnectorhq.com · headers: Authorization: Bearer <PIT>, Version header per GHL API 2.0 docs (2021-07-28), Content-Type/Accept application/json.
 Custom objects: custom_objects.my_listings · custom_objects.properties (MLS) · custom_objects.real_estate_offer. Relations via Associations API.
